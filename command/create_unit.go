@@ -13,7 +13,7 @@ type IUnitCreateDataSetter interface {
 }
 
 func CreateUnit(data []byte,build_unit func(uint16)IUnitCreateDataSetter)(error){
-	r:=&packet_reader{
+	r:=&packet_decoder{
 		data:data,
 		pos:0,
 	}

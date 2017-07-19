@@ -8,8 +8,8 @@ import (
 	"../udp"
 	"../restful_service/room_service"
 	"../session"
-	"../room"
-	"../package_glue"
+	"../world"
+	"../builder"
 	"net"
 	"net/http"
 	"time"
@@ -41,12 +41,10 @@ func main() {
 	//new_world();
 	app.Action=func(c *cli.Context) error{
 		log.Info(c.String("tcp"));
-		hall:=room.NewHall();
-		room_service.NewRoomWS(hall);
+		w:=world.NewWorld();
+		room_service.NewRoomWS(w);
 		udp.StartNewKcpServer(c.String("tcp"),func(conn net.Conn){
-			go session.NewSession().Start(conn, func(i uint32)session.I_session_owner{
-				return (*package_glue.Room)(hall.FindRoom(i));
-			});
+			builder.BuildKcpSession(conn,w);
 		});
 		log.Fatal(http.ListenAndServe(":9091",nil));
 		return nil;

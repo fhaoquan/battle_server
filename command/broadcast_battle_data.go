@@ -13,7 +13,7 @@ func BroadcastBattleData(
 	s_buf []byte,
 	foreach_unit_do func(func(IUnitMovementDataGetter)),
 	broadcast func([]byte,int))(err error){
-	w:=&packet_writer{
+	w:=&packet_encoder{
 		s_buf,
 		0,
 	}

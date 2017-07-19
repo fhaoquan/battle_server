@@ -9,7 +9,7 @@ type IUnitMovementDataSetter interface {
 	SetMovement(speed uint16,face uint16,aiming_face uint16);
 }
 func UpdateUnitMovement(data []byte,finder func(uint16)IUnitMovementDataSetter)(error){
-	r:=&packet_reader{
+	r:=&packet_decoder{
 		data:data,
 		pos:0,
 	}

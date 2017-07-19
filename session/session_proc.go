@@ -36,6 +36,7 @@ func (pkt *S_recv_session_packet)GetMsgBody()[]byte{
 type I_session_owner interface {
 	OnMsg(*S_recv_session_packet);
 	Join(*S_session)bool;
+	OnPkt(uint32,uint32,[]byte);
 }
 type session_proc_context struct{
 	send_pool chan I_send_session_packet;

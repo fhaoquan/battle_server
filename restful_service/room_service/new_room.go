@@ -1,7 +1,7 @@
 package room_service
 
 import (
-	"../../room"
+	"../../builder"
 	"github.com/pkg/errors"
 	"fmt"
 )
@@ -29,12 +29,10 @@ func new_room(context I_room_service_context,param *s_new_room_request_json)(int
 	case 1:
 		if(len(param.V_players)!=2){
 			return -1,errors.New("player count must 2");
+		}else if r,e:=builder.BuildRoom1V1(&param.V_players[0],&param.V_players[1]);e!=nil{
+			return (int)(context.AddNewRoom(r)),nil;
 		}else{
-			return (int)(
-				context.AddNewRoom(room.NewRoom1v1().
-					Player(&param.V_players[0],&param.V_players[1]).
-					Build())),
-				nil;
+			return -1,e;
 		}
 	}
 	return -1,errors.New(fmt.Sprint("unknown room type=",param.V_type));

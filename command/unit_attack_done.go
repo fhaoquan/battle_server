@@ -15,7 +15,7 @@ func UnitAttackDone(
 	s_buf []byte,
 	broadcast func([]byte,int))(err error){
 
-	w:=&packet_writer{
+	w:=&packet_encoder{
 		s_buf,
 		0,
 	}
@@ -24,7 +24,7 @@ func UnitAttackDone(
 			broadcast(s_buf,w.pos+1);
 		}
 	}();
-	r:=&packet_reader{
+	r:=&packet_decoder{
 		data:data,
 		pos:0,
 	}

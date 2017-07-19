@@ -1,16 +1,16 @@
-package main
+package world
 
 import (
 	"sync"
-	"room"
+	"../room"
 )
 
-type world struct {
+type World struct {
 	m sync.RWMutex;
 	room_id_seed uint32;
 	rooms map[uint32]*room.Room;
 }
-func (w *world)FindRoom(rid uint32)(*room.Room){
+func (w *World)FindRoom(rid uint32)(*room.Room){
 	defer func(){
 		w.m.RUnlock();
 	}();
@@ -20,18 +20,18 @@ func (w *world)FindRoom(rid uint32)(*room.Room){
 	}
 	return nil;
 }
-func (w *world)AddNewRoom(b *room.S_room_builder)uint32{
+func (w *World)AddNewRoom(r *room.Room)uint32{
 	defer func(){
 		w.m.Unlock();
 	}();
 	w.m.Lock();
 	w.room_id_seed++;
-	b.ID(w.room_id_seed);
-	w.rooms[w.room_id_seed]=b.Build();
+	r.SetID(w.room_id_seed);
+	w.rooms[w.room_id_seed]=r;
 	return w.room_id_seed;
 }
-func new_world()(*world){
-	return &world{
+func NewWorld()(*World){
+	return &World{
 		room_id_seed:0,
 		rooms:make(map[uint32]*room.Room,1000),
 	}

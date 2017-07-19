@@ -10,10 +10,13 @@ type S_session struct {
 	v_udp_port uint16;
 	F_send func(I_send_session_packet);
 }
-
+func (session *S_session)GetUserID()uint32{
+	return session.V_user_id;
+}
 func (session *S_session)Start(
 	conn net.Conn,
 	finder func(uint32)(I_session_owner)){
+
 	context:=session_proc_context{}
 	context.start_session_proc(session, finder);
 	session.F_send=func(pkt I_send_session_packet){
@@ -28,4 +31,11 @@ func NewSession()(*S_session){
 		0,
 		nil,
 	}
+}
+func BuildSession(
+	conn net.Conn,
+	on_message func (rid uint32,pid uint32,len uint16,body []byte),
+	get_msg_for_send func()){
+
+
 }

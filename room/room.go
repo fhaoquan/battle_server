@@ -2,6 +2,7 @@ package room
 
 import (
 	"../utils"
+	"time"
 )
 
 const MAX_CMD_ID  = 255;
@@ -24,6 +25,12 @@ type room_message interface {
 	GetMsgBody()[]byte;
 	GetUser()uint32;
 	GetRoom()uint32;
+}
+func (r *Room)SetID(v uint32){
+	r.id=v;
+}
+func (r *Room)OnPkt(pid uint32,uid uint32,body []byte){
+
 }
 func (r *Room)OnMsg(msg room_message){
 	r.recv_msg_chan<-msg;
@@ -55,6 +62,12 @@ func (r *Room)Start(){
 				}
 				break;
 			}
+		}
+	}();
+	go func(){
+		for{
+			time.Sleep(time.Millisecond*30);
+			timer<-1;
 		}
 	}();
 }

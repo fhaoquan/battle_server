@@ -21,24 +21,18 @@ func (me* S_room_builder)RouteCommand(cmd_id int,f func([]byte,*Room))(*S_room_b
 func (me* S_room_builder)RouteTimer(cmd_id int,f func(*Room))(*S_room_builder){
 	return me;
 }
-func (me* S_room_builder)Players(i_all_players []interface{
-	GetPlayerID()uint32;
-	GetPlayerName()string;
-}){
-	for i:=range i_all_players{
-		me.r.players[i_all_players[i].GetPlayerID()]=&player{
-			0,
-			i_all_players[i].GetPlayerID(),
-			i_all_players[i].GetPlayerName(),
-			nil,
-		}
-	}
-}
-func (me* S_room_builder)Player(i_player_getter ...interface{
+func (me* S_room_builder)WaitPlayers(i_player_getter ...interface{
 	GetPlayerID()uint32;
 	GetPlayerName()string;
 })(*S_room_builder){
-	me.Players(i_player_getter);
+	for i:=range i_player_getter{
+		me.r.players[i_player_getter[i].GetPlayerID()]=&player{
+			0,
+			i_player_getter[i].GetPlayerID(),
+			i_player_getter[i].GetPlayerName(),
+			nil,
+		}
+	}
 	return me;
 }
 func (me* S_room_builder)Battle(battle i_battle)(*S_room_builder){
