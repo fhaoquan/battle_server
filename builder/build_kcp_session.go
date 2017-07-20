@@ -9,25 +9,29 @@ import (
 )
 func BuildKcpSession(conn net.Conn,world *world.World){
 	s:=sessions.NewSession(conn);
-	r:=room.NilRoom();
-	c:=make(chan int,1);
-	go sessions.NewReadLoop().
-		WithSession(s).
-		WithMsgReceiver(func(uid uint32,rid uint32,bdy []byte){
-			if(r==nil){
-				if r=world.FindRoom(uid);r!=nil{
-					c<-1;
+	c:=make(chan *room.Room,1);
+	go func(){
+		r:=room.NilRoom();
+		sessions.NewReadLoop().
+			WithSession(s).
+			WithMsgReceiver(func(uid uint32,rid uint32,bdy []byte){
+				if(r==nil){
+					if r=world.FindRoom(uid);r!=nil{
+						c<-r;
+					}
 				}
-			}
-			if(r!=nil){
-				r.OnPkt(uid,rid,bdy);
-			}
-		}).
-		Do();
+				if(r!=nil){
+					r.OnPkt(uid,rid,bdy);
+				}
+			}).
+			Do();
+	}();
 	go func(){
 		select {
-		case <-c:
-			close(c);
+		case r,ok:=<-c:
+			if(!ok||r==nil){
+				return;
+			}
 			sessions.NewSendLoop().
 				WithSession(s).
 				WithMsgGetter(func()[]byte{
