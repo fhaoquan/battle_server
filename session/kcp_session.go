@@ -22,6 +22,9 @@ func (me *kcp_session)ReadOne(packet *utils.Packet)(error){
 	}
 	return nil;
 }
+type kcp_session_proc struct {
+	session *kcp_session;
+}
 
 type kcp_session_option struct {
 	*kcp_session;
