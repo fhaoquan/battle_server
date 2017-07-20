@@ -29,7 +29,7 @@ type room_message interface {
 func (r *Room)SetID(v uint32){
 	r.id=v;
 }
-func (r *Room)OnPkt(pid uint32,uid uint32,body []byte){
+func (r *Room)OnPkt(uid uint32,rid uint32,body []byte){
 
 }
 func (r *Room)OnMsg(msg room_message){
@@ -82,4 +82,7 @@ func NewRoom()(*S_room_builder){
 			make([]func(*Room),10),
 		},
 	}
+}
+func NilRoom()(*Room){
+	return nil;
 }

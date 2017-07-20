@@ -49,8 +49,8 @@ func empty_session(con net.Conn)(*kcp_session){
 	}
 }
 func wait_room_id(session *kcp_session_option)(error){
-	data:=make([]byte,1024);
-	session.ReadOne(data);
+	//data:=make([]byte,1024);
+	session.ReadOne(nil);
 	return nil;
 }
 func join_the_room(session *kcp_session_option)(error){
@@ -68,10 +68,8 @@ func tttt(){
 		nil,
 	};
 	go func() {
-		f:=wait_room_id;
-		for{
-			f=f(s);
-		}
+		//f:=wait_room_id;
+
 	}();
 	utils.NewPacket(nil).Cast(func(packet *utils.Packet) {
 		s.ReadOne(packet);
