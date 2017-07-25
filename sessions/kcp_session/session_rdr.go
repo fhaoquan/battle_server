@@ -1,4 +1,4 @@
-package sessions
+package kcp_session
 
 import (
 	"io"
@@ -30,7 +30,7 @@ func (me *read_loop_context)Do(){
 			}
 			u:=binary.BigEndian.Uint32(buf[2:6]);
 			r:=binary.BigEndian.Uint32(buf[6:10]);
-			me.on_msg(u,r,buf[10:l]);
+			me.on_msg(u,r,buf[10:l+2]);
 		}
 		return nil;
 	}();
@@ -38,6 +38,7 @@ func (me *read_loop_context)Do(){
 }
 type i_WithMsgReceiverRtn interface{Do()}
 func (me *read_loop_context)WithMsgReceiver(on_msg onMsgFunc)(i_WithMsgReceiverRtn){
+	me.on_msg=on_msg;
 	return me;
 }
 type i_WithSessionRtn interface{WithMsgReceiver(on_msg onMsgFunc)(i_WithMsgReceiverRtn)}

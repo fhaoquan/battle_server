@@ -1,18 +1,18 @@
 package builder
 
 import (
-	"../sessions"
+	"../sessions/kcp_session"
 	"../room"
 	"../world"
 	"net"
 	"time"
 )
 func BuildKcpSession(conn net.Conn,world *world.World){
-	s:=sessions.NewSession(conn);
+	s:=kcp_session.NewSession(conn);
 	c:=make(chan *room.Room,1);
 	go func(){
 		r:=room.NilRoom();
-		sessions.NewReadLoop().
+		kcp_session.NewReadLoop().
 			WithSession(s).
 			WithMsgReceiver(func(uid uint32,rid uint32,bdy []byte){
 				if(r==nil){
@@ -32,10 +32,10 @@ func BuildKcpSession(conn net.Conn,world *world.World){
 			if(!ok||r==nil){
 				return;
 			}
-			sessions.NewSendLoop().
+			kcp_session.NewSendLoop().
 				WithSession(s).
-				WithMsgGetter(func()[]byte{
-					return nil;
+				WithMsgGetter(func(buf []byte)int{
+					return 0;
 				}).
 				Do();
 		case <-time.After(time.Minute):

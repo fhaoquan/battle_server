@@ -1,4 +1,4 @@
-package udp
+package kcp_session
 
 import (
 	"github.com/xtaci/kcp-go"

@@ -124,7 +124,7 @@ func BuildRoom1V1(waited_players ...interface{
 		RouteCommand(5,build_command_005_handle_func(b)).
 		RouteTimer(0,nil).
 		RouteTimer(1,build_timer_001_handle_func(b)).
-		WaitPlayers(waited_players[0],waited_players[1]).
+		WithPlayers(waited_players[0],waited_players[1]).
 		Build();
 	r.Start();
 	return r,nil;

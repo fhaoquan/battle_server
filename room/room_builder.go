@@ -21,7 +21,7 @@ func (me* S_room_builder)RouteCommand(cmd_id int,f func([]byte,*Room))(*S_room_b
 func (me* S_room_builder)RouteTimer(cmd_id int,f func(*Room))(*S_room_builder){
 	return me;
 }
-func (me* S_room_builder)WaitPlayers(i_player_getter ...interface{
+func (me* S_room_builder)WithPlayers(i_player_getter ...interface{
 	GetPlayerID()uint32;
 	GetPlayerName()string;
 })(*S_room_builder){

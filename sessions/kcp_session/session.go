@@ -1,4 +1,4 @@
-package sessions
+package kcp_session
 
 import "net"
 

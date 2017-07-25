@@ -1,12 +1,35 @@
-package sessions
+package kcp_session
 
-type message_getter func()[]byte
+import (
+	"fmt"
+	"github.com/pkg/errors"
+	"github.com/sirupsen/logrus"
+)
+
+type message_getter func([]byte)int
 type send_loop_context struct {
-	s *session
+	s *session;
+	pop message_getter;
 }
 
 func (me *send_loop_context)Do(){
-
+	buf:=make([]byte,1024);
+	err:= func()(e error) {
+		defer func(){
+			if err:=recover();err!=nil{
+				e=errors.New(fmt.Sprint(err));
+			}
+		}();
+		for {
+			if l:=me.pop(buf);l>0{
+				if _,e:=me.s.con.Write(buf[:l]);e!=nil{
+					return e;
+				}
+			}
+		}
+		return nil;
+	}();
+	logrus.Error(err);
 }
 type i_WithMsgGetterRtn interface{Do()}
 func (me *send_loop_context)WithMsgGetter(getter message_getter)(i_WithMsgGetterRtn){
