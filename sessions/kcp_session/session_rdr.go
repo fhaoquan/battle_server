@@ -21,19 +21,18 @@ func (me *read_loop_context)Do(){
 			}
 		}();
 		for{
-			if _,e=io.ReadFull(me.s.con,buf[0:2]);e!=nil{
+			if e:=me.s.ReadPacket(buf);e==nil{
+				l:=binary.BigEndian.Uint16(buf[0:2]);
+				u:=binary.BigEndian.Uint32(buf[2:6]);
+				r:=binary.BigEndian.Uint32(buf[6:10]);
+				me.on_msg(u,r,buf[10:l+2]);
+			}else{
 				return e;
 			}
-			l:=binary.BigEndian.Uint16(buf[0:2]);
-			if _,e=io.ReadFull(me.s.con,buf[2:l]);e!=nil{
-				return e;
-			}
-			u:=binary.BigEndian.Uint32(buf[2:6]);
-			r:=binary.BigEndian.Uint32(buf[6:10]);
-			me.on_msg(u,r,buf[10:l+2]);
 		}
 		return nil;
 	}();
+	me.s.con.Close();
 	logrus.Error(err);
 }
 type i_WithMsgReceiverRtn interface{Do()}

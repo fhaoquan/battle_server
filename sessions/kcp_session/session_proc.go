@@ -100,12 +100,31 @@ func build_main_logic(s *session,w *world.World)(f func(interface{})interface{})
 	};
 	return ;
 }
+func recv(p *kcp_packet,s *session)(*kcp_packet,error){
+
+}
+type kcp_packet_option struct{
+	res interface{}
+}
+func(*kcp_packet_option)recv(p *kcp_packet,s *session){
+
+}
 func ttt(s *session,w *world.World){
 	pool:=utils.NewPacketPool(16, func(i utils.I_cached_data) utils.I_cached_data {
 		return &kcp_packet{
 			i,0,0,0,make([]byte,utils.MaxPktSize),
 		}
 	})
+	kcp_packet_option{}.recv(pool.GetEmptyPkt().(*kcp_packet),s)
+	p,e:=recv(pool.GetEmptyPkt().(*kcp_packet),s);
+	if(e){
+		return;
+	}
+	r:=w.FindRoom(p.rid)
+	if(r==nil){
+		return;
+	}
+	pool.GetEmptyPkt().(*kcp_packet).recv(s.con);
 	on_err:=
 		func(e error){
 			logrus.Debug(e);
