@@ -7,29 +7,20 @@ import (
 )
 
 const MAX_CMD_ID  = 255;
-type i_session interface {
-	GetUserID()uint32;
-}
-
 
 type Room struct{
 	id uint32;
+	started bool;
 	players map[uint32]*player;
 	*recv_channel;
-	send_msg_chan chan *room_message;
 	cmd_handlers []func([]byte,*Room);
 	timer_handlers []func(*Room);
 }
-
+func (r *Room)GetID()uint32{
+	return r.id;
+}
 func (r *Room)SetID(v uint32){
 	r.id=v;
-}
-func (r *Room)Join(s i_session)bool{
-	if player,ok:=r.players[s.GetUserID()];ok{
-		player.session=s;
-		return true;
-	}
-	return false;
 }
 func (r *Room)KCPSend(uid uint32,data []byte,len int){
 }
@@ -40,21 +31,32 @@ func (r *Room)UDPSend(uid uint32,data []byte,len int){
 func (r *Room)UDPBroadcast(data []byte,len int){
 }
 func (r *Room)Start(){
+	if(r.started){
+		return ;
+	}
+	r.started=true;
 	timer:=make(chan int,1);
 	go func(){
 		for{
 			select {
-			case msg:=<-r.recv_msg_chan:
-				if(r.cmd_handlers[msg.bdy[0]]!=nil){
-					r.cmd_handlers[msg.bdy[0]](msg.bdy[1:],r);
-				}
-				msg.ReturnToPool();
-				break;
+			case f:=<-r.kcp_chan:
+				f(func(uid uint32, rid uint32, bdy []byte)bool{
+					if(r.cmd_handlers[bdy[0]]!=nil){
+						r.cmd_handlers[bdy[0]](bdy[1:],r);
+					}
+					return true;
+				})
+			case f:=<-r.udp_chan:
+				f(func(adr net.Addr, uid uint32, rid uint32, bdy []byte)bool{
+					if(r.cmd_handlers[bdy[0]]!=nil){
+						r.cmd_handlers[bdy[0]](bdy[1:],r);
+					}
+					return true;
+				})
 			case tid:=<-timer:
 				if(r.timer_handlers[tid]!=nil){
 					r.timer_handlers[tid](r);
 				}
-				break;
 			}
 		}
 	}();
@@ -69,9 +71,10 @@ func NewRoom()(*S_room_builder){
 	return &S_room_builder{
 		&Room{
 			0,
+			false,
 			make(map[uint32]*player),
 			new_recv_channel(),
-			make(chan *room_message,128),
+			make(chan *kcp_message,128),
 			make([]func([]byte,*Room),MAX_CMD_ID),
 			make([]func(*Room),10),
 		},

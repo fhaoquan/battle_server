@@ -55,8 +55,6 @@ func (server *UDPServer)recv_proc(){
 			if _,err:=io.ReadFull(server.conn,d[2:l+2]);err!=nil{
 				return  err;
 			}
-			//server.owner.OnMsg()
-
 		}
 	}();
 	if(err!=nil){

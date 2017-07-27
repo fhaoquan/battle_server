@@ -2,7 +2,7 @@ package room_service
 
 import (
 	"github.com/emicklei/go-restful"
-	"../../room"
+	"../../world"
 )
 
 func get_all_rooms(req *restful.Request, resp *restful.Response){
@@ -13,11 +13,8 @@ func get_room(req *restful.Request, resp *restful.Response){
 func del_room(req *restful.Request, resp *restful.Response){
 }
 
-type I_room_service_context interface {
-	AddNewRoom(r *room.Room)uint32;
-}
 
-func NewRoomWS(context I_room_service_context){
+func NewRoomWS(w *world.World){
 	ws:=new(restful.WebService);
 	ws.
 	Path("/room").
@@ -42,7 +39,7 @@ func NewRoomWS(context I_room_service_context){
 						Err error;
 					}{-1,err})
 				}else {
-					id,err:=new_room(context,s)
+					id,err:=new_room(w,s)
 					res.WriteEntity(&struct {
 						RoomID int;
 						Err error;

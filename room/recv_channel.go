@@ -1,41 +1,26 @@
 package room
 
-import "../utils"
-
-type room_message struct{
-	utils.I_cached_data;
-	len uint16;
-	uid uint32;
-	rid uint32;
-	bdy []byte;
-}
-func (pkt *room_message)Clear(){
-	pkt.len=0;
-	pkt.uid=0;
-	pkt.rid=0;
-}
+import (
+	"net"
+)
 
 type recv_channel struct{
-	recv_msg_chan chan *room_message;
-	cache *utils.PacketPool
+	kcp_chan chan func(func(uid uint32,rid uint32,bdy []byte)bool);
+	udp_chan chan func(func(adr net.Addr,uid uint32,rid uint32,bdy []byte)bool);
 }
 
-func (r *recv_channel)OnPkt(uid uint32,rid uint32,body []byte){
-	msg:=r.cache.GetEmptyPkt().(*room_message);
-	msg.len=uint16(len(body));
-	msg.uid=uid;
-	msg.rid=rid;
-	copy(msg.bdy,body);
-	r.recv_msg_chan<-msg;
+func (r *recv_channel)OnKcp(f func(func(uid uint32,rid uint32,bdy []byte)bool))(e error){
+	r.kcp_chan<-f;
+	return nil;
+}
+func (r *recv_channel)OnUdp(f func(func(adr net.Addr,uid uint32,rid uint32,bdy []byte)bool))(e error){
+	r.udp_chan<-f;
+	return nil;
 }
 
 func new_recv_channel()(*recv_channel){
 	return &recv_channel{
-		make(chan *room_message,32),
-		utils.NewPacketPool(128,func(i utils.I_cached_data)utils.I_cached_data{
-			return &room_message{
-				i,0,0,0,make([]byte,utils.MaxPktSize),
-			}
-		}),
+		make(chan func(func(uid uint32,rid uint32,bdy []byte)bool),16),
+		make(chan func(func(adr net.Addr,uid uint32,rid uint32,bdy []byte)bool),16),
 	}
 }

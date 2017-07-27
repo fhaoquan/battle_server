@@ -30,13 +30,8 @@ func (me* S_room_builder)WithPlayers(i_player_getter ...interface{
 			0,
 			i_player_getter[i].GetPlayerID(),
 			i_player_getter[i].GetPlayerName(),
-			nil,
 		}
 	}
-	return me;
-}
-func (me* S_room_builder)Battle(battle i_battle)(*S_room_builder){
-	me.r.battle=battle;
 	return me;
 }
 func (me* S_room_builder)Build()(*Room){

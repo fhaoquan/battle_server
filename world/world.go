@@ -20,15 +20,14 @@ func (w *World)FindRoom(rid uint32)(*room.Room){
 	}
 	return nil;
 }
-func (w *World)AddNewRoom(r *room.Room)uint32{
+func (w *World)AddNewRoom(new_room func(id uint32)*room.Room){
 	defer func(){
 		w.m.Unlock();
 	}();
 	w.m.Lock();
-	w.room_id_seed++;
-	r.SetID(w.room_id_seed);
-	w.rooms[w.room_id_seed]=r;
-	return w.room_id_seed;
+	r:=new_room(w.room_id_seed);
+	w.rooms[r.GetID()]=r;
+	w.room_id_seed=r.GetID()+1;
 }
 func NewWorld()(*World){
 	return &World{

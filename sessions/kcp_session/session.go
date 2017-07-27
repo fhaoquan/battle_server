@@ -7,12 +7,12 @@ import (
 	"errors"
 )
 
-type session struct {
+type Session struct {
 	head32 []byte;
 	con net.Conn;
 }
 
-func (s *session)ReadPacket(buf []byte)(error){
+func (s *Session)ReadPacket(buf []byte)(error){
 	if _,e:=io.ReadFull(s.con,s.head32);e!=nil{
 		return e;
 	}
@@ -29,8 +29,8 @@ func (s *session)ReadPacket(buf []byte)(error){
 	return nil;
 }
 
-func NewSession(con net.Conn)(s *session){
-	return &session{
+func NewSession(con net.Conn)(s *Session){
+	return &Session{
 		con:con,
 	}
 }

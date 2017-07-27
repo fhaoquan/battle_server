@@ -5,6 +5,9 @@ import (
 	"../battle"
 	"../command"
 	"../utils"
+	"../world"
+	"github.com/sirupsen/logrus"
+	"errors"
 )
 type unit_data_setter battle.Unit
 
@@ -109,23 +112,59 @@ func build_timer_001_handle_func(b *battle.Battle)(func(r *room.Room)){
 		)
 	};
 }
-func BuildRoom1V1(waited_players ...interface{
+
+type BuildRoom1V1Context struct {
+	w *world.World;
+	p []interface{
+		GetPlayerID()uint32;
+		GetPlayerName()string;
+	};
+}
+func(context *BuildRoom1V1Context)AtWorld(w *world.World)(*BuildRoom1V1Context){
+	context.w=w;
+	return context;
+}
+func(context *BuildRoom1V1Context)WaitPlayers(plrs ...interface{
 	GetPlayerID()uint32;
 	GetPlayerName()string;
-})(*room.Room,error){
-	b:=battle.NewBattle();
-	r:=room.NewRoom().
-		Battle(b).
-		RouteCommand(0,nil).
-		RouteCommand(1,nil).
-		RouteCommand(2,build_command_002_handle_func(b)).
-		RouteCommand(3,build_command_003_handle_func(b)).
-		RouteCommand(4,build_command_004_handle_func(b)).
-		RouteCommand(5,build_command_005_handle_func(b)).
-		RouteTimer(0,nil).
-		RouteTimer(1,build_timer_001_handle_func(b)).
-		WithPlayers(waited_players[0],waited_players[1]).
-		Build();
-	r.Start();
-	return r,nil;
+})(*BuildRoom1V1Context){
+	context.p=plrs;
+	return context;
+}
+func(context *BuildRoom1V1Context)DoBuild()(*room.Room,error){
+	f:=func(b *battle.Battle)(*room.Room){
+		return room.NewRoom().
+			RouteCommand(0,nil).
+			RouteCommand(1,nil).
+			RouteCommand(2,build_command_002_handle_func(b)).
+			RouteCommand(3,build_command_003_handle_func(b)).
+			RouteCommand(4,build_command_004_handle_func(b)).
+			RouteCommand(5,build_command_005_handle_func(b)).
+			RouteTimer(0,nil).
+			RouteTimer(1,build_timer_001_handle_func(b)).
+			WithPlayers(context.p[0],context.p[1]).
+			Build();
+	}
+	err:=error(nil);
+	res:=(*room.Room)(nil);
+	context.w.AddNewRoom(func(id uint32)*room.Room{
+		switch rtn:=BuildUdpSession(int(id));rtn.(type){
+		case func(r *room.Room)(uint32):
+			res:=f(battle.NewBattle());
+			res.SetID(rtn.(func(r *room.Room)(uint32))(res));
+			res.Start();
+			return res;
+		case error:
+			err=rtn.(error);
+			return nil;
+		default:
+			err=errors.New("switch res:=BuildUdpSession(int(id));res.(type) has default")
+			return nil;
+		}
+	});
+	return res,nil;
+}
+
+func BuildRoom1V1()*BuildRoom1V1Context{
+	return &BuildRoom1V1Context{};
 }

@@ -1,19 +1,58 @@
 package kcp_session
 
 import (
-	"io"
 	"encoding/binary"
 	"github.com/sirupsen/logrus"
 	"github.com/pkg/errors"
 	"fmt"
+	"../../utils"
 )
-type onMsgFunc func(uid uint32,rid uint32,bdy []byte)
-type read_loop_context struct {
-	s *session;
-	on_msg onMsgFunc;
+
+type cached_kcp_empty_packet struct {
+	l uint16;
+	u uint32;
+	r uint32;
+	b []byte;
+	o utils.ICachedData;
 }
-func (me *read_loop_context)Do(){
-	buf:=make([]byte,1024);
+func (me *cached_kcp_empty_packet)Clear(){
+	me.l=0;
+	me.u=0;
+	me.r=0;
+	me.o=nil;
+}
+func (me *cached_kcp_empty_packet)use_data_util_true(f func(uid uint32,rid uint32,bdy []byte)bool){
+	if me.o.IsReturned(){
+		return;
+	}
+	if(f(me.u,me.r,me.b[10:me.l])){
+		me.o.Return();
+	};
+}
+
+type RecvUtilErrorContext struct {
+	s *Session;
+	msg_pusher func(func(func(uid uint32,rid uint32,bdy []byte)bool))(error)
+	err_handle func(err error);
+}
+func (context *RecvUtilErrorContext)WithSession(s*Session)*RecvUtilErrorContext{
+	context.s=s;
+	return context;
+}
+func (context *RecvUtilErrorContext)WithMsgPusher(f func(func(func(uid uint32,rid uint32,bdy []byte)bool))(error))*RecvUtilErrorContext{
+	context.msg_pusher=f;
+	return context;
+}
+func (context *RecvUtilErrorContext)WithErrHandle(f func(err error))*RecvUtilErrorContext{
+	context.err_handle=f;
+	return context;
+}
+func (context *RecvUtilErrorContext)RecvUtilError(){
+	mpl:=utils.NewMemoryPool(16,func(i utils.ICachedData)utils.IUserData{
+		return &cached_kcp_empty_packet{
+			0,0,0,make([]byte,utils.MaxPktSize),i,
+		}
+	})
 	err:=func()(e error){
 		defer func(){
 			if err:=recover();err!=nil{
@@ -21,30 +60,19 @@ func (me *read_loop_context)Do(){
 			}
 		}();
 		for{
-			if e:=me.s.ReadPacket(buf);e==nil{
-				l:=binary.BigEndian.Uint16(buf[0:2]);
-				u:=binary.BigEndian.Uint32(buf[2:6]);
-				r:=binary.BigEndian.Uint32(buf[6:10]);
-				me.on_msg(u,r,buf[10:l+2]);
-			}else{
+			buf:=mpl.Get().GetUserData().(*cached_kcp_empty_packet);
+			if e:=context.s.ReadPacket(buf.b);e!=nil{
+				return e;
+			}
+			buf.l=binary.BigEndian.Uint16(buf.b[0:2]);
+			buf.u=binary.BigEndian.Uint32(buf.b[2:6]);
+			buf.r=binary.BigEndian.Uint32(buf.b[6:10]);
+			if e:=context.msg_pusher(buf.use_data_util_true);e!=nil{
 				return e;
 			}
 		}
 		return nil;
 	}();
-	me.s.con.Close();
+	context.s.con.Close();
 	logrus.Error(err);
-}
-type i_WithMsgReceiverRtn interface{Do()}
-func (me *read_loop_context)WithMsgReceiver(on_msg onMsgFunc)(i_WithMsgReceiverRtn){
-	me.on_msg=on_msg;
-	return me;
-}
-type i_WithSessionRtn interface{WithMsgReceiver(on_msg onMsgFunc)(i_WithMsgReceiverRtn)}
-func (me *read_loop_context)WithSession(s *session)i_WithSessionRtn{
-	return me;
-}
-type i_RdlpRtn interface {WithSession(*session)(i_WithSessionRtn)}
-func NewReadLoop()i_RdlpRtn  {
-	return &read_loop_context{}
 }
