@@ -1,43 +1,28 @@
 package kcp_session
 
 import (
-	"fmt"
+	"../../utils"
 	"github.com/pkg/errors"
-	"github.com/sirupsen/logrus"
+	"net"
+	"encoding/binary"
+	"fmt"
 )
-type SendUtilErrorContext struct {
-	s *Session;
-	msg_puller func([]byte)int
-	err_handle func(err error);
-}
-func (context *SendUtilErrorContext)WithSession(s*Session)*SendUtilErrorContext{
-	context.s=s;
-	return context;
-}
-func (context *SendUtilErrorContext)WithMsgPuller(f func([]byte)int)*SendUtilErrorContext{
-	context.msg_puller=f;
-	return context;
-}
-func (context *SendUtilErrorContext)WithErrHandle(f func(err error))*SendUtilErrorContext{
-	context.err_handle=f;
-	return context;
-}
-func (context *SendUtilErrorContext)SendUtilError(){
-	buf:=make([]byte,1024);
-	err:= func()(e error) {
-		defer func(){
-			if err:=recover();err!=nil{
-				e=errors.New(fmt.Sprint(err));
-			}
-		}();
-		for {
-			if l:=context.msg_puller(buf);l>0{
-				if _,e:=context.s.con.Write(buf[:l]);e!=nil{
-					return e;
-				}
-			}
+func SendUtilError(conn net.Conn,pop func([]byte)int)(e error){
+	defer func(){
+		if err:=recover();err!=nil{
+			e=errors.New(fmt.Sprint(err));
 		}
-		return nil;
 	}();
-	logrus.Error(err);
+	buf:=make([]byte,utils.MaxPktSize);
+	for{
+		l:=pop(buf[6:]);
+		if l<=0{
+			return errors.New("stoped for pop len")
+		}
+		binary.BigEndian.PutUint16(buf[4:6],(uint16)(l+2));
+		binary.BigEndian.PutUint32(buf[0:4],123454321);
+		if _,e:=conn.Write(buf[0:l+6]);e!=nil{
+			return e;
+		}
+	}
 }

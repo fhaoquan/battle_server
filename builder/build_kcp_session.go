@@ -11,44 +11,30 @@ import (
 )
 
 func BuildKcpSession(conn net.Conn,world *world.World){
-	s:=kcp_session.NewSession(conn);
-	f:=func(r *room.Room) {
-		new(kcp_session.SendUtilErrorContext).
-			WithSession(s).
-			WithMsgPuller(
-			func([]byte)int{
-				return 0;
-			}).
-			WithErrHandle(
-			func(err error){
-				logrus.Error(err);
-			}).
-			SendUtilError();
+	f1:=func(r *room.Room,u uint32) {
+		logrus.Fatal(kcp_session.SendUtilError(
+			conn,
+			func(bytes []byte)int {
+				return -1;
+			},
+		))
+		conn.Close();
 	}
-	go func(r *room.Room){
-		new(kcp_session.RecvUtilErrorContext).
-			WithSession(s).
-			WithMsgPusher(
-			func(data_user func(func(uid uint32,rid uint32,bdy []byte)bool))(error){
+	f2:=func(r *room.Room){
+		logrus.Fatal(kcp_session.RecvUntilError(
+			conn,
+			func(len uint16,uid uint32,rid uint32,bdy []byte)error{
 				if(r==nil){
-					data_user(func(uid uint32, rid uint32, bdy []byte)bool{
-						if r=world.FindRoom(uid);r!=nil{
-							go f(r);
-							return false;
-						}
-						return true;
-					})
+					if r=world.FindRoom(rid);r==nil{
+						return errors.New(fmt.Sprintf("cant find room id=",uid));
+					}else{
+						go f1(r,uid);
+					}
 				}
-				if(r!=nil){
-					r.OnKcp(data_user);
-					return nil;
-				}
-				return errors.New("cant find room");
-			}).
-			WithErrHandle(
-			func(err error){
-				logrus.Error(err);
-			}).
-			RecvUtilError();
-	}(nil);
+				return r.OnKcp(len,uid,rid,bdy);
+			},
+		))
+		conn.Close();
+	}
+	go f2(nil);
 }

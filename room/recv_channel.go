@@ -1,26 +1,40 @@
 package room
 
 import (
+	"../utils"
 	"net"
 )
 
 type recv_channel struct{
-	kcp_chan chan func(func(uid uint32,rid uint32,bdy []byte)bool);
-	udp_chan chan func(func(adr net.Addr,uid uint32,rid uint32,bdy []byte)bool);
+	kcp_chan chan utils.IDataOwner;
+	kcp_pool *utils.MemoryPool;
+	udp_chan chan utils.IDataOwner;
+	udp_pool *utils.MemoryPool;
 }
 
-func (r *recv_channel)OnKcp(f func(func(uid uint32,rid uint32,bdy []byte)bool))(e error){
-	r.kcp_chan<-f;
+func (r *recv_channel)OnKcp(len uint16,uid uint32,rid uint32,bdy []byte)(e error){
+	o:=r.kcp_pool.PopOne();
+	o.GetUserData().(*kcp_packet).set_all(len,uid,rid,bdy);
+	r.kcp_chan<-o;
 	return nil;
 }
-func (r *recv_channel)OnUdp(f func(func(adr net.Addr,uid uint32,rid uint32,bdy []byte)bool))(e error){
-	r.udp_chan<-f;
+func (r *recv_channel)OnUdp(adr net.Addr,len uint16,uid uint32,rid uint32,bdy []byte)(e error){
+	o:=r.udp_pool.PopOne();
+	o.GetUserData().(*udp_packet).set_all(adr,len,uid,rid,bdy);
+	r.udp_chan<-o;
 	return nil;
 }
 
 func new_recv_channel()(*recv_channel){
+	size:=16;
 	return &recv_channel{
-		make(chan func(func(uid uint32,rid uint32,bdy []byte)bool),16),
-		make(chan func(func(adr net.Addr,uid uint32,rid uint32,bdy []byte)bool),16),
+		kcp_chan:make(chan utils.IDataOwner,size),
+		kcp_pool:utils.NewMemoryPool(size, func()interface{} {
+			return &kcp_packet{0,0,0,make([]byte,utils.MaxPktSize)};
+		}),
+		udp_chan:make(chan utils.IDataOwner,size),
+		udp_pool:utils.NewMemoryPool(size, func()interface{} {
+			return &udp_packet{nil,&kcp_packet{0,0,0,make([]byte,utils.MaxPktSize)}};
+		}),
 	}
 }

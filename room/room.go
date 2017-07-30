@@ -1,9 +1,9 @@
 package room
 
 import (
-	"../utils"
 	"time"
 	"net"
+	"../sessions/packet"
 )
 
 const MAX_CMD_ID  = 255;
@@ -15,44 +15,36 @@ type Room struct{
 	*recv_channel;
 	cmd_handlers []func([]byte,*Room);
 	timer_handlers []func(*Room);
+
 }
 func (r *Room)GetID()uint32{
 	return r.id;
 }
-func (r *Room)SetID(v uint32){
+func (r *Room)SetID(v uint32)*Room{
 	r.id=v;
+	return r;
 }
-func (r *Room)KCPSend(uid uint32,data []byte,len int){
-}
-func (r *Room)KCPBroadcast(data []byte,len int){
-}
-func (r *Room)UDPSend(uid uint32,data []byte,len int){
-}
-func (r *Room)UDPBroadcast(data []byte,len int){
-}
-func (r *Room)Start(){
+func (r *Room)Start()*Room{
 	if(r.started){
-		return ;
+		return r;
 	}
 	r.started=true;
 	timer:=make(chan int,1);
 	go func(){
 		for{
 			select {
-			case f:=<-r.kcp_chan:
-				f(func(uid uint32, rid uint32, bdy []byte)bool{
-					if(r.cmd_handlers[bdy[0]]!=nil){
-						r.cmd_handlers[bdy[0]](bdy[1:],r);
-					}
-					return true;
-				})
-			case f:=<-r.udp_chan:
-				f(func(adr net.Addr, uid uint32, rid uint32, bdy []byte)bool{
-					if(r.cmd_handlers[bdy[0]]!=nil){
-						r.cmd_handlers[bdy[0]](bdy[1:],r);
-					}
-					return true;
-				})
+			case dat:=<-r.kcp_chan:
+				bdy:=dat.GetUserData().(*kcp_packet).bdy;
+				if(r.cmd_handlers[bdy[0]]!=nil){
+					r.cmd_handlers[bdy[0]](bdy[1:],r);
+				}
+				dat.Return();
+			case dat:=<-r.udp_chan:
+				bdy:=dat.GetUserData().(*udp_packet).bdy;
+				if(r.cmd_handlers[bdy[0]]!=nil){
+					r.cmd_handlers[bdy[0]](bdy[1:],r);
+				}
+				dat.Return();
 			case tid:=<-timer:
 				if(r.timer_handlers[tid]!=nil){
 					r.timer_handlers[tid](r);
@@ -66,6 +58,7 @@ func (r *Room)Start(){
 			timer<-1;
 		}
 	}();
+	return r;
 }
 func NewRoom()(*S_room_builder){
 	return &S_room_builder{
@@ -74,7 +67,6 @@ func NewRoom()(*S_room_builder){
 			false,
 			make(map[uint32]*player),
 			new_recv_channel(),
-			make(chan *kcp_message,128),
 			make([]func([]byte,*Room),MAX_CMD_ID),
 			make([]func(*Room),10),
 		},

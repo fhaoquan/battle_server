@@ -1,7 +1,13 @@
-package utils
+package test
+
+import "bytes"
+
+type IUserData interface {
+	Clear();
+}
 type IDataOwner interface {
 	IsReturned()bool;
-	GetUserData()interface{};
+	GetUserData()IUserData;
 	Return();
 	GetUseOneTime()IUseOneTime;
 }
@@ -10,17 +16,18 @@ type IUseOneTime interface{
 }
 type cached_data struct{
 	free bool;
-	data interface{};
+	data IUserData;
 	owner *MemoryPool;
 }
 func (me *cached_data)IsReturned()bool{
 	return !me.free;
 }
-func (me *cached_data)GetUserData()interface{}{
+func (me *cached_data)GetUserData()IUserData{
 	return me.data;
 }
 func (me *cached_data)Return(){
 	if !me.IsReturned(){
+		me.data.Clear();
 		me.owner.cache<-me;
 		me.free=false;
 	}
@@ -40,10 +47,10 @@ func (me *cached_data)GetUseOneTime()IUseOneTime{
 type MemoryPool struct{
 	cache chan *cached_data;
 }
-func (pool *MemoryPool)PopOne()IDataOwner{
+func (pool *MemoryPool)PullOne()IDataOwner{
 	return <-pool.cache;
 }
-func NewMemoryPool(size int,builder func()interface{})(*MemoryPool){
+func NewMemoryPool(size int,builder func()IUserData)(*MemoryPool){
 	p:=&MemoryPool{
 		make(chan *cached_data,size),
 	};
@@ -53,4 +60,7 @@ func NewMemoryPool(size int,builder func()interface{})(*MemoryPool){
 		p.cache<-c;
 	}
 	return p;
+}
+func uuu(){
+	bytes.NewBuffer(make([]byte,1024)).WriteRune()
 }

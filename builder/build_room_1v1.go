@@ -147,21 +147,19 @@ func(context *BuildRoom1V1Context)DoBuild()(*room.Room,error){
 	}
 	err:=error(nil);
 	res:=(*room.Room)(nil);
-	context.w.AddNewRoom(func(id uint32)*room.Room{
-		switch rtn:=BuildUdpSession(int(id));rtn.(type){
-		case func(r *room.Room)(uint32):
-			res:=f(battle.NewBattle());
-			res.SetID(rtn.(func(r *room.Room)(uint32))(res));
-			res.Start();
-			return res;
-		case error:
-			err=rtn.(error);
-			return nil;
-		default:
-			err=errors.New("switch res:=BuildUdpSession(int(id));res.(type) has default")
-			return nil;
-		}
-	});
+	context.w.AddNewRoom(
+		func(id uint32)*room.Room{
+			if b,e:=BuildUdpSession(int(id));e==nil{
+				r:=f(battle.NewBattle());
+				r.SetID(b(r));
+				r.Start();
+				res=r;
+				return r;
+			}else{
+				err=e;
+				return nil;
+			}
+		});
 	return res,nil;
 }
 

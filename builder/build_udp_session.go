@@ -6,11 +6,12 @@ import (
 	"net"
 	"github.com/sirupsen/logrus"
 	"errors"
+	"time"
 )
 
 
-func BuildUdpSession(start_port int)(interface{}){
-	f:=func(port int,s *udp_session.Session)func(r *room.Room)(uint32){
+func BuildUdpSession(start_port int)(func(r *room.Room)(uint32),error){
+	f:=func(port int,conn net.PacketConn)func(r *room.Room)(uint32){
 		return func(r *room.Room)(uint32){
 			go func() {
 				new(udp_session.SendUtilErrorContext).
@@ -26,26 +27,27 @@ func BuildUdpSession(start_port int)(interface{}){
 					SendUtilError();
 			}();
 			go func(){
-				new(udp_session.RecvUtilErrorContext).
-					WithSession(s).
-					WithMsgPusher(
-					func(f func(func(addr net.Addr,uid uint32,rid uint32,bdy []byte)bool))(error){
-						r.OnUdp(f);
-						return nil;
-					}).
-					WithErrHandle(
-					func(err error){
-						logrus.Error(err);
-					}).
-					RecvUtilError();
+				logrus.Fatal(udp_session.RecvUntilFalse(
+					conn,
+					func(addr net.Addr,len uint16,uid uint32,rid uint32,bdy []byte)bool {
+						return r.OnUdp(addr,len,uid,rid,bdy)==nil;
+					},
+				))
+				conn.Close();
 			}();
 			return uint32(port);
 		}
 	}
-	for i:=0;i<1000;i++{
-		if s,e:=udp_session.NewSession(start_port+i);e==nil{
-			return f(start_port+i,s);
+	t:=time.Now()
+	for{
+		if(time.Now().Sub(t).Minutes()>1){
+			return nil,errors.New("cant listen udp");
 		}
+		if s,e:=udp_session.TryListen(start_port);e==nil{
+			return f(start_port,s),nil;
+		}
+		start_port++;
+		time.Sleep(time.Millisecond*100);
 	}
-	return errors.New("cant listen udp");
+	return nil,errors.New("cant listen udp");
 }
