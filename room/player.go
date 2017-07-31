@@ -1,8 +1,11 @@
 package room
 
-type player struct{
+type Player struct{
 	flag int;
 	id uint32;
 	name string;
-	send_channel chan []byte;
+	kcp_chan chan []byte
+}
+func (p *Player)SetKcpSender(c chan []byte){
+	p.kcp_chan=c;
 }

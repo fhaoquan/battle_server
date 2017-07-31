@@ -11,7 +11,7 @@ const MAX_CMD_ID  = 255;
 type Room struct{
 	id uint32;
 	started bool;
-	players map[uint32]*player;
+	players map[uint32]*Player;
 	*recv_channel;
 	cmd_handlers []func([]byte,*Room);
 	timer_handlers []func(*Room);
@@ -23,6 +23,9 @@ func (r *Room)GetID()uint32{
 func (r *Room)SetID(v uint32)*Room{
 	r.id=v;
 	return r;
+}
+func (r *Room)GetPlayer(uid uint32)(*Player){
+	return r.players[uid]
 }
 func (r *Room)Start()*Room{
 	if(r.started){
@@ -65,7 +68,7 @@ func NewRoom()(*S_room_builder){
 		&Room{
 			0,
 			false,
-			make(map[uint32]*player),
+			make(map[uint32]*Player),
 			new_recv_channel(),
 			make([]func([]byte,*Room),MAX_CMD_ID),
 			make([]func(*Room),10),

@@ -26,7 +26,7 @@ func (me* S_room_builder)WithPlayers(i_player_getter ...interface{
 	GetPlayerName()string;
 })(*S_room_builder){
 	for i:=range i_player_getter{
-		me.r.players[i_player_getter[i].GetPlayerID()]=&player{
+		me.r.players[i_player_getter[i].GetPlayerID()]=&Player{
 			0,
 			i_player_getter[i].GetPlayerID(),
 			i_player_getter[i].GetPlayerName(),
