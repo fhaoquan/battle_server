@@ -36,3 +36,7 @@ func BroadcastBattleData(
 	p1(uint8(count));
 	return nil;
 }
+
+func (cmd *Commamd)BroadcastBattleData()(i interface{}){
+	return nil;
+}

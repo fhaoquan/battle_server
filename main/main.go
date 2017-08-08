@@ -5,13 +5,9 @@ import (
 	"os"
 	log "github.com/sirupsen/logrus"
 	cli "github.com/urfave/cli"
-	"../udp"
 	"../restful_service/room_service"
-	"../sessions"
+	"../sessions/kcp_session"
 	"../world"
-	"../builder"
-	"../room"
-	"net"
 	"net/http"
 	"time"
 )
@@ -23,14 +19,9 @@ func main() {
 		Version:"0.0.1",
 		Flags:[]cli.Flag{
 			&cli.StringFlag{
-				Name:"tcp",
+				Name:"kcp",
 				Value:":9090",
-				Usage:"listen tcp",
-			},
-			&cli.StringFlag{
-				Name:"udp",
-				Value:":9091",
-				Usage:"listen tcp",
+				Usage:"listen kcp",
 			},
 			&cli.StringFlag{
 				Name:"rpc",
@@ -39,15 +30,12 @@ func main() {
 			},
 		},
 	};
-	//new_world();
 	app.Action=func(c *cli.Context) error{
 		log.Info(c.String("tcp"));
 		w:=world.NewWorld();
 		room_service.NewRoomWS(w);
-		udp.StartNewKcpServer(c.String("tcp"),func(conn net.Conn){
-			builder.BuildKcpSession(conn,w);
-		});
-		log.Fatal(http.ListenAndServe(":9091",nil));
+		kcp_session.NewKcpServer(c.String("tcp")).StartAt(w);
+		http.ListenAndServe(c.String("rpc"),nil);
 		return nil;
 	}
 	log.Info("server started at ",time.Now());

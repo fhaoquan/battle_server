@@ -3,6 +3,7 @@ package world
 import (
 	"sync"
 	"../room"
+	"net"
 )
 
 type World struct {
@@ -28,6 +29,8 @@ func (w *World)AddNewRoom(new_room func(id uint32)*room.Room){
 	r:=new_room(w.room_id_seed);
 	w.rooms[r.GetID()]=r;
 	w.room_id_seed=r.GetID()+1;
+}
+func (w *World)OnNewKCPConnection(conn net.Conn){
 }
 func NewWorld()(*World){
 	return &World{

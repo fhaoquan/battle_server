@@ -1,66 +1,47 @@
 package test
 
-import "bytes"
-
-type IUserData interface {
-	Clear();
-}
-type IDataOwner interface {
+type ICachedData interface {
 	IsReturned()bool;
-	GetUserData()IUserData;
+	OnPop();
+	OnReturn();
 	Return();
-	GetUseOneTime()IUseOneTime;
-}
-type IUseOneTime interface{
-	UseOneTime(func(interface{}));
 }
 type cached_data struct{
-	free bool;
-	data IUserData;
-	owner *MemoryPool;
+	_cached_data_free bool;
+	_cached_data_data ICachedData;
+	_cached_data_pool *MemoryPool;
 }
 func (me *cached_data)IsReturned()bool{
-	return !me.free;
-}
-func (me *cached_data)GetUserData()IUserData{
-	return me.data;
+	return !me._cached_data_free;
 }
 func (me *cached_data)Return(){
 	if !me.IsReturned(){
-		me.data.Clear();
-		me.owner.cache<-me;
-		me.free=false;
+		me._cached_data_pool.cache<-me._cached_data_data;
+		me.OnReturn();
 	}
 }
-func (me *cached_data)UseOneTime(f func(interface{})){
-	if(me.IsReturned()){
-		return ;
-	}
-	if(f!=nil){
-		f(me.GetUserData());
-		me.Return();
-	}
+func (me *cached_data)OnPop(){
+	me._cached_data_free=true;
 }
-func (me *cached_data)GetUseOneTime()IUseOneTime{
-	return me;
+func (me *cached_data)OnReturn(){
+	me._cached_data_free=false;
 }
 type MemoryPool struct{
-	cache chan *cached_data;
+	cache chan ICachedData;
 }
-func (pool *MemoryPool)PullOne()IDataOwner{
-	return <-pool.cache;
+func (pool *MemoryPool)PullOne()ICachedData{
+	o:=<-pool.cache;
+	o.OnPop();
+	return o;
 }
-func NewMemoryPool(size int,builder func()IUserData)(*MemoryPool){
+func NewMemoryPool(size int,builder func(ICachedData)ICachedData)(*MemoryPool){
 	p:=&MemoryPool{
-		make(chan *cached_data,size),
+		make(chan ICachedData,size),
 	};
 	for i:=0;i<size;i++{
-		c:=&cached_data{false,nil,p}
-		c.data=builder();
-		p.cache<-c;
+		c:=&cached_data{true,nil,p};
+		c._cached_data_data=builder(c);
+		c.Return();
 	}
 	return p;
-}
-func uuu(){
-	bytes.NewBuffer(make([]byte,1024)).WriteRune()
 }

@@ -1,7 +1,7 @@
 package battle
 type Unit struct{
 	ID uint16;
-	Camps uint16;
+	Camps uint8;
 	X uint16;
 	Y uint16;
 	AttackPower uint16;

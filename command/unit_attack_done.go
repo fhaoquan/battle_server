@@ -1,55 +1,50 @@
 package command
 
-import "github.com/pkg/errors"
-
-type IUnitAttackHelper interface {
-	GetAttackPower()uint16;
-	GetHP()uint16;
-	SetHP(uint16);
-	GetID()uint16;
-}
-
-func UnitAttackDone(
-	data []byte,
-	find_unit func(uint16)IUnitAttackHelper,
-	s_buf []byte,
-	broadcast func([]byte,int))(err error){
-
+import (
+	"../utils"
+	"../sessions/packet"
+	"errors"
+	"fmt"
+)
+func (cmd *Commamd)UnitAttackDone(data []byte)(i interface{}){
+	defer func(){
+		if e:=recover();e!=nil{
+			i=errors.New(fmt.Sprint(e));
+		}
+	}()
 	w:=&packet_encoder{
-		s_buf,
+		make([]byte,utils.MaxPktSize),
 		0,
 	}
-	defer func(){
-		if(err!=nil){
-			broadcast(s_buf,w.pos+1);
-		}
-	}();
 	r:=&packet_decoder{
 		data:data,
 		pos:0,
 	}
-	u1:=find_unit(r.read_unit_id());
-	if(u1==nil){
-		return errors.New("cant find src unit id ");
-	}
-
-	w.write_unit_id(u1.GetID());
+	power:=(r.read_unit_attack_power())
 	count:=(int)(r.read_unit_count());
 	w.write_unit_count((uint8)(count));
 	for i:=0;i<count;i++{
 		id:=r.read_unit_id();
-		w.write_uint16(id);
-		u2:=find_unit(id);
-		if(u2!=nil){
-			if(u2.GetHP()>u1.GetAttackPower()){
-				u2.SetHP(u2.GetHP()-u1.GetAttackPower());
+		w.write_unit_id(id);
+		u2:=cmd.base_room.GetBattle().FindUnit(id);
+		if u2!=nil{
+			if u2.HP>power{
+				u2.HP-=power;
 			}else{
-				u2.SetHP(0);
+				u2.HP=0;
 			}
-			w.write_uint16(u2.GetHP());
+			w.write_uint16(u2.HP);
 		}else{
 			w.write_uint16(0);
 		}
 	}
-	return nil;
+	return packet.IKcpResponse(&struct {
+		broadcast bool;
+		uid uint32;
+		bdy []byte;
+	}{
+		true,
+		0,
+		w.data[:w.pos],
+	});
 }

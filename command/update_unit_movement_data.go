@@ -2,27 +2,27 @@ package command
 
 import (
 	"github.com/pkg/errors"
+	"fmt"
 )
 
-type IUnitMovementDataSetter interface {
-	SetLocation(x uint16,y uint16);
-	SetMovement(speed uint16,face uint16,aiming_face uint16);
-}
-func UpdateUnitMovement(data []byte,finder func(uint16)IUnitMovementDataSetter)(error){
+func (cmd *Commamd)UpdateUnitMovement(pkt []byte)(i interface{}){
+	defer func(){
+		if e:=recover();e!=nil{
+			i=errors.New(fmt.Sprint(e));
+		}
+	}()
 	r:=&packet_decoder{
-		data:data,
+		data:pkt,
 		pos:0,
 	}
 	count:=(int)(r.read_unit_count());
 	for i:=0;i<count;i++{
-		if u:=finder(r.read_unit_id());u!=nil{
-			u.SetLocation(
-				r.read_unit_location_x(),
-				r.read_unit_location_y());
-			u.SetMovement(
-				r.read_unit_speed(),
-				r.read_unit_face(),
-				r.read_unit_aiming_face());
+		if u:=cmd.base_room.GetBattle().FindUnit(r.read_unit_id());u!=nil{
+			u.X=r.read_unit_location_x();
+			u.Y=r.read_unit_location_y();
+			u.Speed=r.read_unit_speed();
+			u.Direction=r.read_unit_face();
+			u.AimingFace=r.read_unit_aiming_face();
 		}else{
 			return errors.New("packet error");
 		}

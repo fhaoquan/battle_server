@@ -4,32 +4,29 @@ import (
 	"github.com/xtaci/kcp-go"
 	"time"
 	log "github.com/sirupsen/logrus"
-	"net"
+	"../../world"
 )
 type kcp_config interface {
 	GetAddr()string;
 }
 type KcpServer struct {
+	addr_string string;
 	CloseSignal chan int;
 }
-
-func StartNewKcpServer(addr string,on_connection func(conn net.Conn))(*KcpServer,error){
-	l,e:=kcp.Listen(addr);
+func (s *KcpServer)StartAt(world *world.World)(error){
+	l,e:=kcp.Listen(s.addr_string);
 	if(e!=nil){
-		return nil,e;
+		return e;
 	}
 	lis:=l.(*kcp.Listener);
 	if e=lis.SetReadBuffer(1024*16);e!=nil{
-		return nil,e;
+		return e;
 	}
 	if e=lis.SetWriteBuffer(1024*16);e!=nil{
-		return nil,e;
+		return e;
 	}
 	if e=lis.SetDeadline(time.Now().Add(time.Second*5));e!=nil{
-		return nil,e;
-	}
-	s:=&KcpServer{
-		CloseSignal:make(chan int,1),
+		return e;
 	}
 	go func(){
 		defer func(){
@@ -52,13 +49,19 @@ func StartNewKcpServer(addr string,on_connection func(conn net.Conn))(*KcpServer
 					conn.SetNoDelay(1, 5, 2, 1);
 					conn.SetStreamMode(true);
 					conn.SetMtu(1400);
-					on_connection(conn);
+					NewSession(conn).StartAt(world);
 				}else if err,ok:=e.(interface{Timeout()bool});!ok||!err.Timeout(){
 					log.Error(e);
 				}
 			}
 		}
 	}();
-
-	return s,nil;
+	return nil;
+}
+func NewKcpServer(addr string)(*KcpServer){
+	s:=&KcpServer{
+		addr_string:addr,
+		CloseSignal:make(chan int,1),
+	}
+	return s;
 }

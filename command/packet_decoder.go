@@ -64,6 +64,10 @@ func (r *packet_decoder)read_unit_stat()(uint16){
 	return r.read_uint16();
 }
 
+func (r *packet_decoder)read_unit_attack_power()(uint16){
+	return r.read_uint16();
+}
+
 func (r *packet_decoder)read_unit_count()(uint8){
 	return r.read_uint8();
 }
