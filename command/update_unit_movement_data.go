@@ -5,7 +5,7 @@ import (
 	"fmt"
 )
 
-func (cmd *Commamd)UpdateUnitMovement(pkt []byte)(i interface{}){
+func (cmd *CommandContext)UpdateUnitMovement(pkt []byte)(i interface{}){
 	defer func(){
 		if e:=recover();e!=nil{
 			i=errors.New(fmt.Sprint(e));

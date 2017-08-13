@@ -15,6 +15,16 @@ func (context *Battle)NewUnit(id uint16)*Unit{
 	context.all_units[id-1000]=NewUnit(id);
 	return context.all_units[id-1000];
 }
+func (context *Battle)ForEachUnitDo(f func(*Unit)(bool)){
+	for _,u:=range context.all_units{
+		if u==nil{
+			continue;
+		}
+		if !f(u){
+			return ;
+		}
+	}
+}
 func (context *Battle)FindUnitDo(id uint16,f func(*Unit)){
 	f(context.FindUnit(id));
 }

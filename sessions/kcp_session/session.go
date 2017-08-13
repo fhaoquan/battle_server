@@ -6,7 +6,6 @@ import (
 	"../../world"
 	"../../room"
 	"../../utils"
-	"../packet"
 	"github.com/sirupsen/logrus"
 	"sync"
 )
@@ -18,13 +17,13 @@ type Session struct {
 	the_world *world.World;
 	the_room *room.Room;
 	pool *utils.MemoryPool;
-	req chan packet.IKcpRequest;
-	res chan packet.IKcpResponse;
+	req chan utils.IKcpRequest;
+	res chan utils.IKcpResponse;
 	once sync.Once;
 	wait sync.WaitGroup;
 }
 
-func (s *Session)send_proc(cmd <-chan packet.IKcpResponse)(error){
+func (s *Session)send_proc(cmd <-chan utils.IKcpResponse)(error){
 	for{
 		select {
 		case pkt,ok:=<-cmd:
@@ -40,7 +39,7 @@ func (s *Session)send_proc(cmd <-chan packet.IKcpResponse)(error){
 		}
 	}
 }
-func (s *Session)main_proc(cmd <-chan packet.IKcpRequest)(error){
+func (s *Session)main_proc(cmd <-chan utils.IKcpRequest)(error){
 	for{
 		select {
 		case pkt,ok:=<-cmd:
@@ -59,8 +58,8 @@ func (s *Session)main_proc(cmd <-chan packet.IKcpRequest)(error){
 		}
 	}
 }
-func (s *Session)recv_proc(c chan<- packet.IKcpRequest)(error){
-	f:= func(p packet.IKcpRequest)(ok bool){
+func (s *Session)recv_proc(c chan<- utils.IKcpRequest)(error){
+	f:= func(p utils.IKcpRequest)(ok bool){
 		defer func(){
 			if recover()!=nil{
 				ok=false;
@@ -112,8 +111,8 @@ func (s *Session)handle_first_packet(packet *KcpReq)(error){
 func (s *Session)StartAt(w *world.World){
 	go func() {
 		s.the_world=w;
-		s.req=make(chan packet.IKcpRequest,8);
-		s.res=make(chan packet.IKcpResponse,8);
+		s.req=make(chan utils.IKcpRequest,8);
+		s.res=make(chan utils.IKcpResponse,8);
 		b := s.pool.Pop().(*KcpReq);
 		if e := s.handle_first_packet(b); e != nil {
 			b.Return();
@@ -122,9 +121,11 @@ func (s *Session)StartAt(w *world.World){
 		s.req<-b;
 		go func(){
 			s.wait.Add(1);
+			s.the_player.SetKcpSender(s.res);
 			if e:=s.send_proc(s.res);e!=nil{
 				logrus.Error(e);
 			}
+			s.the_player.SetKcpSender(nil);
 			s.wait.Done();
 			s.Close();
 		}();

@@ -5,15 +5,6 @@ import (
 	"../../world"
 )
 
-func get_all_rooms(req *restful.Request, resp *restful.Response){
-}
-func get_room(req *restful.Request, resp *restful.Response){
-}
-
-func del_room(req *restful.Request, resp *restful.Response){
-}
-
-
 func NewRoomWS(w *world.World){
 	ws:=new(restful.WebService);
 	ws.
@@ -22,34 +13,31 @@ func NewRoomWS(w *world.World){
 		Produces(restful.MIME_JSON);
 	ws.Route(
 		ws.	GET("/").
-			To(get_all_rooms));
+			To(
+			func(req *restful.Request, res *restful.Response){
+				list_rooms(req,res,w);
+			}));
+
+	ws.Route(
+		ws.	GET("/count").
+			To(
+			func(req *restful.Request, res *restful.Response){
+				count_room(req,res,w);
+			}));
 
 	ws.Route(
 		ws.	GET("/{room_id}").
-			To(get_room));
+			To(
+			func(req *restful.Request, res *restful.Response){
+				get_room(req,res,w);
+			}));
 
 	ws.Route(
 		ws.	PUT("/").
 			To(
 			func(req *restful.Request, res *restful.Response){
-				s:=&s_new_room_request_json{};
-				if err:=req.ReadEntity(s);err!=nil{
-					res.WriteEntity(&struct {
-						RoomID int;
-						Err error;
-					}{-1,err})
-				}else {
-					id,err:=new_room(w,s)
-					res.WriteEntity(&struct {
-						RoomID int;
-						Err error;
-					}{id,err})
-				}
+				new_room(req,res,w);
 			}));
-
-	ws.Route(
-		ws.	DELETE("/{room_id}").
-			To(del_room));
 
 	restful.Add(ws);
 }

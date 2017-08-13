@@ -1,7 +1,7 @@
 package room
 
 import (
-	"../sessions/packet"
+	"../utils"
 	"net"
 )
 
@@ -10,23 +10,26 @@ type Player struct{
 	id uint32;
 	name string;
 	udp_addr net.Addr;
-	kcp_chan chan []byte;
-	udp_chan chan func(func(addr net.Addr,data []byte));
+	kcp_chan chan utils.IKcpResponse;
+	udp_chan chan utils.IUdpResponse;
 }
-func (p *Player)SetKcpSender(c chan []byte){
+func (p *Player)SetKcpSender(c chan utils.IKcpResponse){
 	p.kcp_chan=c;
 }
-func (p *Player)SetUDPSender(c chan func(func(addr net.Addr,data []byte))){
+func (p *Player)SetUDPSender(c chan utils.IUdpResponse){
 	p.udp_chan=c;
 }
 func (p *Player)SetUDPAddr(addr net.Addr){
 	p.udp_addr=addr;
 }
-func (p *Player)SendUDP(response packet.IUdpResponse){
-	p.udp_chan<-func(f func(addr net.Addr,data []byte)){
-		f(p.udp_addr,response.GetBDY());
+func (p *Player)SendUDP(response utils.IUdpResponse){
+	if p.udp_chan!=nil{
+		response.SetAdr(p.udp_addr);
+		p.udp_chan<-response;
 	}
 }
-func (p *Player)SendKCP(response packet.IKcpResponse){
-	p.kcp_chan<-response.GetBDY();
+func (p *Player)SendKCP(response utils.IKcpResponse){
+	if p.kcp_chan!=nil{
+		p.kcp_chan<-response;
+	}
 }

@@ -8,48 +8,45 @@ import (
 	"errors"
 )
 
-func (cmd *Commamd)CreateUnit(data []byte)(i interface{}){
+func (cmd *CommandContext)CreateUnit(data []byte)(i interface{}){
 	defer func(){
 		if e:=recover();e!=nil{
 			i=errors.New(fmt.Sprint(e));
 		}
 	}()
-	w:=&packet_encoder{
-		make([]byte,utils.MaxPktSize),
+	res:=cmd.kcp_res_pool.Pop().(*kcp_response);
+	res.broadcast=true;
+	wtr:=&packet_encoder{
+		res.bdy,
 		0,
 	}
-	r:=&packet_decoder{
+	rdr:=&packet_decoder{
 		data:data,
 		pos:0,
 	}
-	count:=r.read_unit_count();
-	w.write_unit_count(count);
+	f:=wtr.get_uint16_placeholder();
+	count:=rdr.read_unit_count();
+	wtr.write_unit_count(count);
 	for i:=0;i<(int)(count);i++{
 		cmd.base_room.GetBattle().CreateUnitDo(r.read_unit_id(), func(u *battle.Unit) {
-			u.Camps=r.read_unit_camps();
-			u.HP=r.read_unit_hp();
-			u.X=r.read_unit_location_x();
-			u.Y=r.read_unit_location_y();
-			u.Speed=r.read_unit_speed();
-			u.Direction=r.read_unit_face();
-			u.AimingFace=r.read_unit_aiming_face();
-			w.write_unit_id(u.ID)
-			w.write_uint8(u.Camps)
-			w.write_uint16(u.HP);
-			w.write_uint16(u.X);
-			w.write_uint16(u.Y);
-			w.write_uint16(u.Speed);
-			w.write_uint16(u.Direction);
-			w.write_uint16(u.AimingFace);
+			u.Camps=rdr.read_unit_camps();
+			u.HP=rdr.read_unit_hp();
+			u.X=rdr.read_unit_location_x();
+			u.Y=rdr.read_unit_location_y();
+			u.Speed=rdr.read_unit_speed();
+			u.Direction=rdr.read_unit_face();
+			u.AimingFace=rdr.read_unit_aiming_face();
+			wtr.write_unit_id(u.ID)
+			wtr.write_uint8(u.Camps)
+			wtr.write_uint16(u.HP);
+			wtr.write_uint16(u.X);
+			wtr.write_uint16(u.Y);
+			wtr.write_uint16(u.Speed);
+			wtr.write_uint16(u.Direction);
+			wtr.write_uint16(u.AimingFace);
 		})
 	}
-	return packet.IKcpResponse(&struct {
-		broadcast bool;
-		uid uint32;
-		bdy []byte;
-	}{
-		true,
-		0,
-		w.data[:w.pos],
-	});
+	res.len=uint16(wtr.pos);
+	f(res.len);
+	return res;
 }

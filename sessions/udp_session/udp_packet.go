@@ -24,7 +24,7 @@ func (me *udp_packet)GetUID()uint32{
 func (me *udp_packet)GetRID()uint32{
 	return me.r;
 }
-func (me *udp_packet)GetBDY()[]byte{
+func (me *udp_packet)GetRecvData()[]byte{
 	return me.b[10:me.l];
 }
 func (me *udp_packet)GetADR()net.Addr{

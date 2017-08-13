@@ -7,6 +7,7 @@ import (
 	cli "github.com/urfave/cli"
 	"../restful_service/room_service"
 	"../sessions/kcp_session"
+	_ "../sessions/udp_session"
 	"../world"
 	"net/http"
 	"time"
@@ -30,11 +31,11 @@ func main() {
 			},
 		},
 	};
+
 	app.Action=func(c *cli.Context) error{
-		log.Info(c.String("tcp"));
 		w:=world.NewWorld();
-		room_service.NewRoomWS(w);
 		kcp_session.NewKcpServer(c.String("tcp")).StartAt(w);
+		room_service.NewRoomWS(w);
 		http.ListenAndServe(c.String("rpc"),nil);
 		return nil;
 	}

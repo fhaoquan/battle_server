@@ -50,6 +50,6 @@ func (me *KcpReq)GetUID()uint32{
 func (me *KcpReq)GetRID()uint32{
 	return me.r;
 }
-func (me *KcpReq)GetBDY()[]byte{
+func (me *KcpReq)GetRecvData()[]byte{
 	return me.b[14:me.l+4];
 }

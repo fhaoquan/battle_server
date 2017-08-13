@@ -2,44 +2,33 @@ package udp_session
 
 import (
 	"net"
-	"fmt"
 	"../../utils"
 	"../../room"
-	"../packet"
 	"errors"
 	"github.com/sirupsen/logrus"
 	"encoding/binary"
 	"sync"
 )
 type Session struct {
-	addr net.Addr;
 	pool *utils.MemoryPool;
-	conn net.PacketConn;
+	conn *udp_connection;
 	the_room *room.Room;
-	req chan packet.IUdpRequest;
-	res chan packet.IUdpResponse;
+	req chan utils.IUdpRequest;
+	res chan utils.IUdpResponse;
 	once sync.Once;
 	wait sync.WaitGroup;
 }
-func (s *Session)try_listen(port int)(net.PacketConn,error){
-	if adr,err:=net.ResolveUDPAddr("udp",fmt.Sprint(":",port));err!=nil{
-		return nil,err;
-	}else if con,err:=net.ListenUDP("udp", adr);err!=nil{
-		return nil,err;
-	}else{
-		con.SetWriteBuffer(utils.MaxPktSize*16);
-		con.SetReadBuffer(utils.MaxPktSize*16);
-		return con,nil;
-	}
+func (s *Session)GetAddr()*net.UDPAddr{
+	return s.conn.addr;
 }
-func (s *Session)send_proc(cmd <-chan packet.IUdpResponse)(error){
+func (s *Session)send_proc(c <-chan utils.IUdpResponse)(error){
 	s.the_room.ForEachPlayer(func(player *room.Player)bool{
-		player.SetUDPSender(cmd);
+		player.SetUDPSender(c);
 		return true;
 	});
 	for{
 		select {
-		case pkt,ok:=<-cmd:
+		case pkt,ok:=<-c:
 			if !ok{
 				pkt.Return();
 				return nil;
@@ -52,7 +41,7 @@ func (s *Session)send_proc(cmd <-chan packet.IUdpResponse)(error){
 		}
 	}
 }
-func (s *Session)main_proc(cmd <-chan packet.IUdpRequest)(error){
+func (s *Session)main_proc(cmd <-chan utils.IUdpRequest)(error){
 	for{
 		select {
 		case pkt,ok:=<-cmd:
@@ -86,8 +75,8 @@ func (s *Session)read(packet *udp_packet)(error){
 	packet.r=binary.BigEndian.Uint32(packet.b[10:14]);
 	return nil;
 }
-func (s *Session)recv_proc(c chan packet.IUdpRequest)(error){
-	f:= func(p packet.IUdpRequest)(ok bool){
+func (s *Session)recv_proc(c chan utils.IUdpRequest)(error){
+	f:= func(p utils.IUdpRequest)(ok bool){
 		defer func(){
 			if recover()!=nil{
 				ok=false;
@@ -98,7 +87,7 @@ func (s *Session)recv_proc(c chan packet.IUdpRequest)(error){
 	}
 	t:=0;
 	for{
-		p:=s.pool.Pop().(packet.IUdpRequest);
+		p:=s.pool.Pop().(utils.IUdpRequest);
 		switch e:=p.ReadAt(s.conn);e.(type){
 		case nil:
 			if !f(p){
@@ -126,8 +115,8 @@ func (s *Session)handle_err(e error){
 	logrus.Error(e);
 }
 func (s *Session)StartAt(room *room.Room){
-	s.req=make(chan packet.IUdpRequest,8);
-	s.res=make(chan packet.IUdpResponse,8);
+	s.req=make(chan utils.IUdpRequest,8);
+	s.res=make(chan utils.IUdpResponse,8);
 	go func(){
 		s.wait.Add(1);
 		if e:=s.send_proc(s.res);e!=nil{
@@ -158,27 +147,13 @@ func (s *Session)Close(){
 		close(s.req);
 		close(s.res);
 		s.wait.Wait();
-		s.conn.Close();
+		s.conn.Return();
 	})
 }
-func NewSession(port int)(*Session,error){
-	s:=&Session{};
-	for i:=0;i<1000;i++{
-		if conn,e:=s.try_listen(port+i);e==nil{
-			s.conn=conn;
-			return s,nil;
-		}
-	}
-	return nil,errors.New("can not listen udp");
-}
-func TryListen(port int)(net.PacketConn,error){
-	if adr,err:=net.ResolveUDPAddr("udp",fmt.Sprint(":",port));err!=nil{
-		return nil,err;
-	}else if con,err:=net.ListenUDP("udp", adr);err!=nil{
-		return nil,err;
+func NewSession()(*Session,error){
+	if c,e:=the_session_manager.pop();e!=nil{
+		return nil,e;
 	}else{
-		con.SetWriteBuffer(utils.MaxPktSize*16);
-		con.SetReadBuffer(utils.MaxPktSize*16);
-		return con,nil;
+		return &Session{conn:c},nil;
 	}
 }

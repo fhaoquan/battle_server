@@ -1,34 +1,34 @@
-package packet
+package utils
 
 import (
-	"../../utils"
 	"net"
 )
 
 type IKcpRequest interface {
-	utils.ICachedData;
+	ICachedData;
 	ReadAt(net.Conn)error;
 	GetLEN()uint16;
 	GetUID()uint32;
 	GetRID()uint32;
-	GetBDY()[]byte;
+	GetRecvData()[]byte;
 }
 type IUdpRequest interface{
-	utils.ICachedData;
+	ICachedData;
 	ReadAt(net.PacketConn)error;
 	GetLEN()uint16;
 	GetUID()uint32;
 	GetRID()uint32;
-	GetBDY()[]byte;
+	GetRecvData()[]byte;
 	GetAdr()net.Addr;
 }
 type IKcpResponse interface {
-	utils.ICachedData;
+	ICachedData;
 	IsBroadcast()bool;
 	GetUID()uint32;
-	GetBDY()[]byte;
+	GetSendData()[]byte;
 }
 type IUdpResponse interface{
 	IKcpResponse;
+	SetAdr(net.Addr);
 	GetAdr()net.Addr;
 }

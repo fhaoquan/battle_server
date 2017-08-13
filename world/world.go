@@ -8,8 +8,25 @@ import (
 
 type World struct {
 	m sync.RWMutex;
-	room_id_seed uint32;
 	rooms map[uint32]*room.Room;
+}
+func (w *World)CountRoom()(int){
+	defer func(){
+		w.m.RUnlock();
+	}();
+	w.m.RLock();
+	return len(w.rooms);
+}
+func (w *World)ForEachRoom(f func(*room.Room)bool){
+	defer func(){
+		w.m.RUnlock();
+	}();
+	w.m.RLock();
+	for _,v:=range w.rooms{
+		if !f(v){
+			return ;
+		}
+	}
 }
 func (w *World)FindRoom(rid uint32)(*room.Room){
 	defer func(){
@@ -21,20 +38,17 @@ func (w *World)FindRoom(rid uint32)(*room.Room){
 	}
 	return nil;
 }
-func (w *World)AddNewRoom(new_room func(id uint32)*room.Room){
+func (w *World)AddNewRoom(r *room.Room){
 	defer func(){
 		w.m.Unlock();
 	}();
 	w.m.Lock();
-	r:=new_room(w.room_id_seed);
 	w.rooms[r.GetID()]=r;
-	w.room_id_seed=r.GetID()+1;
 }
 func (w *World)OnNewKCPConnection(conn net.Conn){
 }
 func NewWorld()(*World){
 	return &World{
-		room_id_seed:0,
 		rooms:make(map[uint32]*room.Room,1000),
 	}
 }
