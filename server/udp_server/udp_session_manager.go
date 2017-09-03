@@ -1,7 +1,7 @@
-package udp_service
+package udp_server
 
 import (
-	"../utils"
+	"../../utils"
 	"net"
 	"fmt"
 	"errors"

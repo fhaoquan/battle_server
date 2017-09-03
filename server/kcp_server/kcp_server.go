@@ -1,12 +1,10 @@
-package kcp_session
+package kcp_server
 
 import (
 	"github.com/xtaci/kcp-go"
 	"time"
 	"github.com/sirupsen/logrus"
 	"../../world"
-	"net"
-	"io"
 )
 type kcp_config interface {
 	GetAddr()string;
