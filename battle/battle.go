@@ -1,8 +1,12 @@
 package battle
 
+import "../utils"
+
 const unit_id_offset	=1000;
 const max_unit_count	=2000;
 type Battle struct {
+	kcp_res_pool *utils.MemoryPool;
+	udp_res_pool *utils.MemoryPool;
 	all_units []*Unit;
 }
 func (context *Battle)AllUnit()[]*Unit{
@@ -31,11 +35,16 @@ func (context *Battle)FindUnitDo(id uint16,f func(*Unit)){
 func (context *Battle)CreateUnitDo(id uint16,f func(*Unit)){
 	f(context.NewUnit(id));
 }
-type FindUnit struct{
-	B *Battle;
-};
 func NewBattle()*Battle{
 	return &Battle{
+		utils.NewMemoryPool(8, func(impl utils.ICachedData)utils.ICachedData{
+			return &kcp_response{
+				impl,false,0,0,make([]byte,utils.MaxPktSize),
+			}
+		}),
+		utils.NewMemoryPool(8, func(impl utils.ICachedData)utils.ICachedData{
+			return &kcp_response{}
+		}),
 		make([]*Unit,max_unit_count),
 	};
 }

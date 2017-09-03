@@ -5,9 +5,8 @@ import (
 	"os"
 	log "github.com/sirupsen/logrus"
 	cli "github.com/urfave/cli"
-	"../restful_service/room_service"
-	"../sessions/kcp_session"
-	_ "../sessions/udp_session"
+	"../server/restful"
+	"../server/kcp_server"
 	"../world"
 	"net/http"
 	"time"
@@ -34,8 +33,8 @@ func main() {
 
 	app.Action=func(c *cli.Context) error{
 		w:=world.NewWorld();
-		kcp_session.NewKcpServer(c.String("tcp")).StartAt(w);
-		room_service.NewRoomWS(w);
+		kcp_server.NewKcpServer(c.String("tcp")).StartAt(w);
+		restful.NewRoomWS(w);
 		http.ListenAndServe(c.String("rpc"),nil);
 		return nil;
 	}

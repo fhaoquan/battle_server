@@ -25,11 +25,15 @@ type IKcpResponse interface {
 	ICachedData;
 	IsBroadcast()bool;
 	GetUID()uint32;
+	SetUID(uint32);
 	GetSendData()[]byte;
+	GetAllBDY()[]byte;
 }
 type IUdpResponse interface{
 	ICachedData;
 	IsBroadcast()bool;
 	GetUID()uint32;
+	SetUID(uint32);
 	GetSendData()[]byte;
+	GetAllBDY()[]byte;
 }
