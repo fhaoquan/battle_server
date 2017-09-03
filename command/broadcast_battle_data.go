@@ -6,15 +6,6 @@ import (
 	"errors"
 )
 
-type IUnitMovementDataGetter interface {
-	GetID()uint16;
-	GetX()uint16;
-	GetY()uint16;
-	GetSpeed()uint16;
-	GetFace()uint16;
-	GetAimingFace()uint16;
-}
-
 func (cmd *CommandContext)BroadcastBattleMovementData()(i interface{}){
 	defer func(){
 		if e:=recover();e!=nil{
@@ -41,6 +32,6 @@ func (cmd *CommandContext)BroadcastBattleMovementData()(i interface{}){
 	})
 	ph1(uint8(count));
 	res.len=uint16(wtr.pos);
-	ph0(res.len);
+	ph0(res.len-2);
 	return res;
 }

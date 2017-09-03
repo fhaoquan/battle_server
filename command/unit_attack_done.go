@@ -47,6 +47,6 @@ func (cmd *CommandContext)UnitAttackDone(data []byte)(i interface{}){
 		cmd.each_unit_attack_done(rdr,wtr);
 	}
 	res.len=(uint16)(wtr.pos);
-	f(res.len);
+	f(res.len-2);
 	return res;
 }

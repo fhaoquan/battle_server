@@ -1,25 +1,25 @@
-package udp_session
+package udp_service
 
 import (
-	"../../utils"
+	"../utils"
 	"net"
 	"fmt"
 	"errors"
 )
 
-type udp_connection struct {
-	addr *net.UDPAddr
+type UdpConnection struct {
 	utils.ICachedData;
-	net.PacketConn;
+	Addr *net.UDPAddr
+	*net.UDPConn;
 }
-func (me *udp_connection)OnReturn(){
-	if me.PacketConn!=nil{
-		me.PacketConn.Close();
-		me.PacketConn=nil;
+func (me *UdpConnection)OnReturn(){
+	if me.UDPConn!=nil{
+		me.UDPConn.Close();
+		me.UDPConn=nil;
 	}
 }
-func (me *udp_connection)start()(err error){
-	me.PacketConn,err=net.ListenUDP("udp",me.addr);
+func (me *UdpConnection)start()(err error){
+	me.UDPConn,err=net.ListenUDP("udp",me.Addr);
 	if(err!=nil){
 		return err;
 	}
@@ -29,13 +29,13 @@ func (me *udp_connection)start()(err error){
 type session_manager struct {
 	pool *utils.MemoryPool;
 }
-func (me *session_manager)pop()(conn *udp_connection,err error){
+func (me *session_manager)Pop()(conn *UdpConnection,err error){
 	t:=0;
 	for{
 		if(me.pool.Len()==0){
 			return nil,errors.New("not free udp listener!");
 		}
-		c:=me.pool.Pop().(*udp_connection);
+		c:=me.pool.Pop().(*UdpConnection);
 		if e:=c.start();e==nil{
 			return c,nil;
 		}
@@ -50,10 +50,10 @@ func (me *session_manager)pop()(conn *udp_connection,err error){
 func new_session_manager(size int,start int)(*session_manager){
 	m:=&session_manager{
 		pool:utils.NewMemoryPool(size, func(impl utils.ICachedData)utils.ICachedData{
-			s:=new(udp_connection);
-			s.addr,_=net.ResolveUDPAddr("udp",fmt.Sprint(":",start));
+			s:=new(UdpConnection);
+			s.Addr,_=net.ResolveUDPAddr("udp",fmt.Sprint(":",start));
 			s.ICachedData=impl;
-			s.PacketConn=nil;
+			s.UDPConn=nil;
 			start++;
 			return s;
 		}),
@@ -62,5 +62,5 @@ func new_session_manager(size int,start int)(*session_manager){
 }
 
 var(
-	the_session_manager=new_session_manager(utils.MaxRoomSize,utils.UdpListenStart);
+	TheUDPConnManager=new_session_manager(utils.MaxRoomSize,utils.UdpListenStart);
 )

@@ -31,7 +31,7 @@ func (s *Session)send_proc(cmd <-chan utils.IKcpResponse)(error){
 				pkt.Return();
 				return nil;
 			}
-			if _,e:=s.con.Write(pkt.GetBDY());e!=nil{
+			if _,e:=s.con.Write(pkt.GetSendData());e!=nil{
 				pkt.Return();
 				return e;
 			}
@@ -51,7 +51,7 @@ func (s *Session)main_proc(cmd <-chan utils.IKcpRequest)(error){
 					pkt.GetLEN(),
 					pkt.GetUID(),
 					pkt.GetRID(),
-					pkt.GetBDY(),
+					pkt.GetRecvData(),
 				);
 				pkt.Return();
 			}

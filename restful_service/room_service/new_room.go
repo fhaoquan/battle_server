@@ -1,7 +1,7 @@
 package room_service
 
 import (
-	"../../builder"
+	"../../room"
 	"../../world"
 	"github.com/pkg/errors"
 	"fmt"
@@ -32,10 +32,7 @@ func build_room(w *world.World,param *new_room_request_json)(int,error){
 		if(len(param.room_players)!=2){
 			return -1,errors.New("player count must 2");
 		}
-		r,e:=builder.BuildRoom1V1().
-			AtWorld(w).
-			WaitPlayers(&param.room_players[0],&param.room_players[1]).
-			DoBuild();
+		r,e:=room.BuildRoom1v1(&param.room_players[0],&param.room_players[1]);
 		if e!=nil{
 			return int(r.GetID()),nil;
 		}else{

@@ -28,7 +28,8 @@ type IKcpResponse interface {
 	GetSendData()[]byte;
 }
 type IUdpResponse interface{
-	IKcpResponse;
-	SetAdr(net.Addr);
-	GetAdr()net.Addr;
+	ICachedData;
+	IsBroadcast()bool;
+	GetUID()uint32;
+	GetSendData()[]byte;
 }

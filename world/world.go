@@ -4,11 +4,13 @@ import (
 	"sync"
 	"../room"
 	"net"
+	"io"
+	"encoding/binary"
 )
 
 type World struct {
 	m sync.RWMutex;
-	rooms map[uint32]*room.Room;
+	rooms map[uint32]*room.BattleRoom1v1;
 }
 func (w *World)CountRoom()(int){
 	defer func(){
@@ -17,7 +19,7 @@ func (w *World)CountRoom()(int){
 	w.m.RLock();
 	return len(w.rooms);
 }
-func (w *World)ForEachRoom(f func(*room.Room)bool){
+func (w *World)ForEachRoom(f func(*room.BattleRoom1v1)bool){
 	defer func(){
 		w.m.RUnlock();
 	}();
@@ -28,7 +30,7 @@ func (w *World)ForEachRoom(f func(*room.Room)bool){
 		}
 	}
 }
-func (w *World)FindRoom(rid uint32)(*room.Room){
+func (w *World)FindRoom(rid uint32)(*room.BattleRoom1v1){
 	defer func(){
 		w.m.RUnlock();
 	}();
@@ -38,7 +40,7 @@ func (w *World)FindRoom(rid uint32)(*room.Room){
 	}
 	return nil;
 }
-func (w *World)AddNewRoom(r *room.Room){
+func (w *World)AddNewRoom(r *room.BattleRoom1v1){
 	defer func(){
 		w.m.Unlock();
 	}();
@@ -46,9 +48,16 @@ func (w *World)AddNewRoom(r *room.Room){
 	w.rooms[r.GetID()]=r;
 }
 func (w *World)OnNewKCPConnection(conn net.Conn){
+	go func(){
+		b:=make([]byte,16);
+		io.ReadFull(conn,b);
+		r:=binary.BigEndian.Uint32(b[0:4]);
+		u:=binary.BigEndian.Uint32(b[4:8]);
+		w.FindRoom(r).OnKcpConnection(conn,u);
+	}();
 }
 func NewWorld()(*World){
 	return &World{
-		rooms:make(map[uint32]*room.Room,1000),
+		rooms:make(map[uint32]*room.BattleRoom1v1,1000),
 	}
 }

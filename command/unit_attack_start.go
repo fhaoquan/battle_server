@@ -20,6 +20,6 @@ func (cmd *CommandContext)UnitAttackStart(data []byte)(i interface{}){
 	f:=wtr.get_uint16_placeholder();
 	wtr.write_bytes(data);
 	res.len=uint16(wtr.pos);
-	f(res.len);
+	f(res.len-2);
 	return res;
 }

@@ -3,8 +3,10 @@ package kcp_session
 import (
 	"github.com/xtaci/kcp-go"
 	"time"
-	log "github.com/sirupsen/logrus"
+	"github.com/sirupsen/logrus"
 	"../../world"
+	"net"
+	"io"
 )
 type kcp_config interface {
 	GetAddr()string;
@@ -49,9 +51,9 @@ func (s *KcpServer)StartAt(world *world.World)(error){
 					conn.SetNoDelay(1, 5, 2, 1);
 					conn.SetStreamMode(true);
 					conn.SetMtu(1400);
-					NewSession(conn).StartAt(world);
+					world.OnNewKCPConnection(conn);
 				}else if err,ok:=e.(interface{Timeout()bool});!ok||!err.Timeout(){
-					log.Error(e);
+					logrus.Error(e);
 				}
 			}
 		}

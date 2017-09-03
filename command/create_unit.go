@@ -1,9 +1,7 @@
 package command
 
 import (
-	"../utils"
 	"../battle"
-	"../sessions/packet"
 	"fmt"
 	"errors"
 )

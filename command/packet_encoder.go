@@ -6,6 +6,11 @@ type packet_encoder struct{
 	data []byte;
 	pos int;
 }
+func (w *packet_encoder)write_uint64(v uint64)(*packet_encoder){
+	binary.BigEndian.PutUint64(w.data[w.pos:],v);
+	w.pos+=8;
+	return w;
+}
 func (w *packet_encoder)write_uint32(v uint32)(*packet_encoder){
 	binary.BigEndian.PutUint32(w.data[w.pos:],v);
 	w.pos+=4;
