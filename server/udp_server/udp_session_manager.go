@@ -10,16 +10,19 @@ import (
 type UdpConnection struct {
 	utils.ICachedData;
 	Addr *net.UDPAddr
-	*net.UDPConn;
+	conn *net.UDPConn;
 }
 func (me *UdpConnection)OnReturn(){
-	if me.UDPConn!=nil{
-		me.UDPConn.Close();
-		me.UDPConn=nil;
+	if me.conn!=nil{
+		me.conn.Close();
+		me.conn=nil;
 	}
 }
+func (me *UdpConnection)GetConn()*net.UDPConn{
+	return me.conn;
+}
 func (me *UdpConnection)start()(err error){
-	me.UDPConn,err=net.ListenUDP("udp",me.Addr);
+	me.conn,err=net.ListenUDP("udp",me.Addr);
 	if(err!=nil){
 		return err;
 	}
@@ -53,7 +56,7 @@ func new_session_manager(size int,start int)(*session_manager){
 			s:=new(UdpConnection);
 			s.Addr,_=net.ResolveUDPAddr("udp",fmt.Sprint(":",start));
 			s.ICachedData=impl;
-			s.UDPConn=nil;
+			s.conn=nil;
 			start++;
 			return s;
 		}),

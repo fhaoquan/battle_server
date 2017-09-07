@@ -12,12 +12,23 @@ type udp_session struct {
 	udp_conn *udp_server.UdpConnection;
 	udp_addr net.Addr;
 }
+func (me *udp_session)Close(){
+	if c:=me.udp_conn.GetConn();c!=nil{
+		c.Close();
+	}
+
+	me.udp_conn.Return();
+}
 func (me *udp_session)Send(b []byte)(err error){
 	defer func(){
 		if e:=recover();e!=nil{
 			err=errors.New(fmt.Sprint(e));
 		}
 	}()
-	_,err=me.udp_conn.WriteTo(b,me.udp_addr);
-	return ;
+	if c:=me.udp_conn.GetConn();c!=nil{
+		_,err=c.WriteTo(b,me.udp_addr);
+		return ;
+	}else{
+		return errors.New("udp_conn is null");
+	}
 }

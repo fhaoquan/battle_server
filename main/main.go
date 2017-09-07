@@ -10,6 +10,7 @@ import (
 	"../world"
 	"net/http"
 	"time"
+	//"../test"
 )
 
 func main() {
@@ -32,8 +33,9 @@ func main() {
 	};
 
 	app.Action=func(c *cli.Context) error{
+		//test.TestNewRoom();
 		w:=world.NewWorld();
-		kcp_server.NewKcpServer(c.String("tcp")).StartAt(w);
+		kcp_server.NewKcpServer(c.String("kcp")).StartAt(w);
 		restful.NewRoomWS(w);
 		http.ListenAndServe(c.String("rpc"),nil);
 		return nil;

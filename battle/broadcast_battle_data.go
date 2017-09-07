@@ -3,6 +3,7 @@ package battle
 import (
 	"fmt"
 	"errors"
+	"../utils"
 )
 
 func (context *Battle)BroadcastBattleMovementData()(i interface{}){
@@ -11,9 +12,9 @@ func (context *Battle)BroadcastBattleMovementData()(i interface{}){
 			i=errors.New(fmt.Sprint(e));
 		}
 	}()
-	res:=context.udp_res_pool.Pop().(*udp_response);
+	res:=context.udp_res_pool.Pop().(*utils.UdpRes);
 	wtr:=&packet_encoder{
-		res.bdy,
+		res.BDY,
 		0,
 	}
 	ph0:=wtr.get_uint16_placeholder();
@@ -30,7 +31,7 @@ func (context *Battle)BroadcastBattleMovementData()(i interface{}){
 		return true;
 	})
 	ph1(uint8(count));
-	res.len=uint16(wtr.pos);
-	ph0(res.len-2);
+	res.LEN=uint16(wtr.pos);
+	ph0(res.LEN-2);
 	return res;
 }

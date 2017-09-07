@@ -3,6 +3,7 @@ package battle
 import (
 	"errors"
 	"fmt"
+	"../utils"
 )
 func (context *Battle)each_unit_attack_done(rdr *packet_decoder,wtr *packet_encoder)(){
 	power:=(rdr.read_unit_attack_power())
@@ -30,10 +31,10 @@ func (context *Battle)UnitAttackDone(data []byte)(i interface{}){
 			i=errors.New(fmt.Sprint(e));
 		}
 	}()
-	res:=context.kcp_res_pool.Pop().(*kcp_response);
-	res.broadcast=true;
+	res:=context.kcp_res_pool.Pop().(*utils.KcpRes);
+	res.Broadcast=true;
 	wtr:=&packet_encoder{
-		res.bdy,
+		res.BDY,
 		0,
 	}
 	rdr:=&packet_decoder{
@@ -46,7 +47,7 @@ func (context *Battle)UnitAttackDone(data []byte)(i interface{}){
 	for i:=0;i<count;i++{
 		context.each_unit_attack_done(rdr,wtr);
 	}
-	res.len=(uint16)(wtr.pos);
-	f(res.len-2);
+	res.LEN=(uint16)(wtr.pos);
+	f(res.LEN-2);
 	return res;
 }

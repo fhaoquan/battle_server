@@ -20,7 +20,7 @@ func (me *Room1v1)kcp_recv_proc(session *kcp_session){
 		}()
 		err_times:=0;
 		pool:=utils.NewMemoryPool(16, func(impl utils.ICachedData) utils.ICachedData {
-			return &KcpReq{
+			return &utils.KcpReq{
 				impl,0,0,0,make([]byte,utils.MaxPktSize),
 			}
 		})
@@ -31,7 +31,7 @@ func (me *Room1v1)kcp_recv_proc(session *kcp_session){
 					return nil;
 				}
 			default:
-				r:=pool.Pop().(*KcpReq);
+				r:=pool.Pop().(*utils.KcpReq);
 				switch e:=session.Recv(r);e.(type){
 				case nil:
 					err_times=0;

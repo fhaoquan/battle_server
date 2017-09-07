@@ -1,31 +1,20 @@
 package test
 
-import "net"
-
-type kcp_packet struct {
-	l uint16;
-	u uint32;
-	r uint32;
-	b []byte;
+import "../room"
+type s_player_info struct {
+	id int;
+	name string;
 }
-
-func (me *kcp_packet)read(conn net.Conn)(error){
-	return nil;
+func (me *s_player_info)GetPlayerID()uint32{
+	return uint32(me.id);
 }
-
-func (me *kcp_packet)cache(c chan *kcp_packet){
-	c<-me;
+func (me *s_player_info)GetPlayerName()string{
+	return me.name;
 }
-
-func (me *kcp_packet)run(handlers []func([]byte)interface{})interface{}{
-	return handlers[me.b[10]](me.b[11:]);
+type new_room_request_json struct{
+	room_type int;
+	room_players []s_player_info;
 }
-
-type kcp_chain struct {
-	c chan *kcp_packet
-}
-
-func test(p *kcp_packet){
-	p.read(nil);
-	p.cache(nil);
+func TestNewRoom(){
+	room.BuildRoom1v1(&s_player_info{1,"e"},&s_player_info{2,"e"});
 }

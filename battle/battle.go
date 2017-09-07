@@ -38,12 +38,14 @@ func (context *Battle)CreateUnitDo(id uint16,f func(*Unit)){
 func NewBattle()*Battle{
 	return &Battle{
 		utils.NewMemoryPool(8, func(impl utils.ICachedData)utils.ICachedData{
-			return &kcp_response{
+			return &utils.KcpRes{
 				impl,false,0,0,make([]byte,utils.MaxPktSize),
 			}
 		}),
 		utils.NewMemoryPool(8, func(impl utils.ICachedData)utils.ICachedData{
-			return &kcp_response{}
+			return &utils.UdpRes{
+				impl,false,nil,0,0,make([]byte,utils.MaxPktSize),
+			}
 		}),
 		make([]*Unit,max_unit_count),
 	};

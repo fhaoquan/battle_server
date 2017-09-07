@@ -7,8 +7,12 @@ import (
 	"sync"
 )
 type kcp_connection_request struct {
-	uid uint32;
 	conn net.Conn;
+	first_pkt *utils.KcpReq;
+}
+type I_RoomManager interface{
+	AddNewRoom(*Room1v1)
+	DelRoom(*Room1v1)
 }
 type start_event struct{
 
@@ -26,6 +30,7 @@ type BaseRoom struct {
 	once_start sync.Once;
 	once_close sync.Once;
 	wait sync.WaitGroup;
+	manager I_RoomManager;
 }
 func (me *BaseRoom)GetID()(uint32){
 	return me.rid;
@@ -44,6 +49,7 @@ func new_base_room(the_battle *battle.Battle)(*BaseRoom){
 		sync.Once{},
 		sync.Once{},
 		sync.WaitGroup{},
+		nil,
 	}
 	return r;
 }
@@ -128,14 +134,17 @@ func (me *Room1v1)on_udp_message(r utils.IUdpRequest){
 func (me *Room1v1)on_event(event interface{}){
 	switch event.(type){
 	case *kcp_connection_request:
-		switch event.(*kcp_connection_request).uid {
+		switch event.(*kcp_connection_request).first_pkt.UID {
 		case me.p1.uid:
 			me.p1.kcp_session=&kcp_session{event.(*kcp_connection_request).conn,me.p1.uid,}
+			me.kcp_chan<-event.(*kcp_connection_request).first_pkt;
 			go me.kcp_recv_proc(me.p1.kcp_session);
 		case me.p2.uid:
 			me.p2.kcp_session=&kcp_session{event.(*kcp_connection_request).conn,me.p2.uid,}
+			me.kcp_chan<-event.(*kcp_connection_request).first_pkt;
 			go me.kcp_recv_proc(me.p2.kcp_session);
 		default:
+			event.(*kcp_connection_request).first_pkt.Return();
 			event.(*kcp_connection_request).conn.Close();
 		}
 	case *start_event:
@@ -144,20 +153,26 @@ func (me *Room1v1)on_event(event interface{}){
 		me.on_handler_result(me.the_battle.BroadcastBattleMovementData());
 	}
 }
-func (me *Room1v1)OnKcpConnection(conn net.Conn,uid uint32){
+func (me *Room1v1)OnKcpConnection(conn net.Conn,first_pkt *utils.KcpReq){
 	me.event_sig<-&kcp_connection_request{
-		uid,conn,
+		conn,first_pkt,
 	};
 }
-func (me *Room1v1)Start(){
-	me.once_start.Do(func() {
-		go me.start_proc();
+func (me *Room1v1)Start(manager I_RoomManager){
+	me.manager=manager;
+	go me.once_start.Do(func() {
+		me.start_proc();
 	})
 }
 func (me *Room1v1)Close(why error){
-	me.once_close.Do(func() {
-		logrus.Error("room will closed for :",why)
+	go me.once_close.Do(func() {
+		if(me.manager!=nil){
+			me.manager.DelRoom(me);
+		}
+		logrus.Error("room ",me.rid," will closed for :",why)
 		close(me.close_sig);
 		me.wait.Wait();
+		me.p1.udp_session.Close();
+		me.p2.udp_session.Close();
 	})
 }

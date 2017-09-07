@@ -3,6 +3,7 @@ package battle
 import (
 	"fmt"
 	"errors"
+	"../utils"
 )
 
 func (context *Battle)CreateUnit(data []byte)(i interface{}){
@@ -11,10 +12,10 @@ func (context *Battle)CreateUnit(data []byte)(i interface{}){
 			i=errors.New(fmt.Sprint(e));
 		}
 	}()
-	res:=context.kcp_res_pool.Pop().(*kcp_response);
-	res.broadcast=true;
+	res:=context.kcp_res_pool.Pop().(*utils.KcpRes);
+	res.Broadcast=true;
 	wtr:=&packet_encoder{
-		res.bdy,
+		res.BDY,
 		0,
 	}
 	rdr:=&packet_decoder{
@@ -49,7 +50,7 @@ func (context *Battle)CreateUnit(data []byte)(i interface{}){
 			wtr.write_uint16(u.AimingFace);
 		})
 	}
-	res.len=uint16(wtr.pos);
-	f(res.len);
+	res.LEN=uint16(wtr.pos);
+	f(res.LEN-2);
 	return res;
 }

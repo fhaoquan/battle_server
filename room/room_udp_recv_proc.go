@@ -40,7 +40,7 @@ func (me *Room1v1)udp_recv_proc(conn net.PacketConn){
 		}()
 
 		pool:=utils.NewMemoryPool(16, func(impl utils.ICachedData) utils.ICachedData {
-			return &UdpReq{
+			return &utils.UdpReq{
 				impl,&net.UDPAddr{},0,0,0,make([]byte,utils.MaxPktSize),
 			}
 		})
@@ -52,7 +52,7 @@ func (me *Room1v1)udp_recv_proc(conn net.PacketConn){
 					return nil;
 				}
 			default:
-				r:=pool.Pop().(*UdpReq);
+				r:=pool.Pop().(*utils.UdpReq);
 				switch e:=f(r);e.(type){
 				case nil:
 					err_times=0;

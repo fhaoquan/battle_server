@@ -3,7 +3,6 @@ package room
 import (
 	"fmt"
 	"time"
-	"github.com/sirupsen/logrus"
 	"errors"
 )
 
@@ -24,8 +23,8 @@ func (me *Room1v1)start_proc(){
 				if !ok {
 					return errors.New("start stoped by close signal");
 				}
-			case <-time.After(time.Second*30):
-				return errors.New("wait player login timeout");
+			case <-time.After(time.Second*5):
+				return errors.New(fmt.Sprint("room ",me.rid, " wait player login timeout"));
 			case event:=<-me.event_sig:
 				me.on_event(event);
 				if me.p1.kcp_session!=nil && me.p2.kcp_session!=nil{
@@ -34,10 +33,10 @@ func (me *Room1v1)start_proc(){
 			}
 		}
 	}(); e!=nil{
-		logrus.Error(e);
+		me.Close(e);
 		return;
 	}
-	go me.udp_recv_proc(me.p1.udp_session.udp_conn);
+	go me.udp_recv_proc(me.p1.udp_session.udp_conn.GetConn());
 	go me.logic_proc();
 	go me.frame_proc(time.Second*5);
 }
