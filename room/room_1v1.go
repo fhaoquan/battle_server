@@ -150,7 +150,13 @@ func (me *Room1v1)on_event(event interface{}){
 	case *start_event:
 		me.on_handler_result(me.the_battle.BroadcastBattleStart());
 	case *frame_event:
-		me.on_handler_result(me.the_battle.BroadcastBattleMovementData());
+		switch event.(*frame_event).frame%20 {
+		case 0:
+			me.on_handler_result(me.the_battle.BroadcastBattleAll());
+		default:
+			me.on_handler_result(me.the_battle.BroadcastBattleMovementData());
+		}
+
 	}
 }
 func (me *Room1v1)OnKcpConnection(conn net.Conn,first_pkt *utils.KcpReq){
