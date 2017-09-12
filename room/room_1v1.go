@@ -111,9 +111,9 @@ func (me *Room1v1)on_packet(who uint32,bdy []byte){
 	case 3:
 		me.on_handler_result(me.the_battle.UnitAttackDone(bdy[1:]));
 	case 4:
-		me.on_handler_result(me.the_battle.CreateUnit(bdy[1:]));
+		me.on_handler_result(me.the_battle.CreateUnit(who,bdy[1:]));
 	case 5:
-		me.on_handler_result(me.the_battle.CreateUnit(bdy[1:]));
+		me.on_handler_result(me.the_battle.CreateUnit(who,bdy[1:]));
 	}
 }
 func (me *Room1v1)on_udp_response(r utils.IUdpResponse){
