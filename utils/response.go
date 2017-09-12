@@ -20,6 +20,9 @@ func (me *KcpRes)GetUID()uint32{
 func (me *KcpRes)GetSendData()[]byte{
 	return me.BDY[:me.LEN];
 }
+func (me *KcpRes)GetAllBDY()[]byte{
+	return me.BDY;
+}
 
 type UdpRes struct{
 	ICachedData;

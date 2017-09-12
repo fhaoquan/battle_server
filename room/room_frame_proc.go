@@ -21,14 +21,12 @@ func (me *Room1v1)frame_proc(duration time.Duration){
 				err=errors.New(fmt.Sprint(e));
 			}
 		}()
+		t:=time.Tick(time.Millisecond*50);
 		for {
 			select {
-			case _,ok:=<-me.close_sig:
-				if !ok {
-					return nil;
-				}
-			default:
-				time.Sleep(time.Millisecond*50);
+			case <-me.close_sig:
+				return nil;
+			case <-t:
 				me.event_sig<- frame_event{uint32(frame)};
 				frame++;
 			}

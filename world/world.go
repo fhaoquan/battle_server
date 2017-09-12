@@ -4,14 +4,13 @@ import (
 	"sync"
 	"../room"
 	"../utils"
-	"net"
-	"github.com/sirupsen/logrus"
 )
 
 type World struct {
-	m sync.RWMutex;
-	rooms map[uint32]*room.Room1v1;
-	pool *utils.MemoryPool;
+	m			sync.RWMutex;
+	rooms		map[uint32]*room.Room1v1;
+	id_seed		uint32
+	pool		*utils.MemoryPool;
 }
 func (w *World)CountRoom()(int){
 	defer func(){
@@ -46,7 +45,9 @@ func (w *World)AddNewRoom(r *room.Room1v1){
 		w.m.Unlock();
 	}();
 	w.m.Lock();
+	r.SetID(w.id_seed);
 	w.rooms[r.GetID()]=r;
+	w.id_seed++;
 	r.Start(w);
 }
 func (w *World)DelRoom(r *room.Room1v1)  {
@@ -56,31 +57,13 @@ func (w *World)DelRoom(r *room.Room1v1)  {
 	w.m.Lock();
 	delete(w.rooms,r.GetID());
 }
-func (w *World)OnNewKCPConnection(conn net.Conn){
-	go func(){
-		req:=w.pool.Pop().(*utils.KcpReq);
-		if e:=req.ReadAt(conn);e!=nil{
-			logrus.Error("on kcp new connection",e);
-			req.Return();
-			conn.Close();
-			return ;
-		}
-		if r:=w.FindRoom(req.RID);r!=nil{
-			r.OnKcpConnection(conn,req);
-		}else{
-			logrus.Error("on kcp new connection cant find room=",req.RID);
-			req.Return();
-			conn.Close();
-			return ;
-		}
-	}();
-}
 func NewWorld()(*World){
 	return &World{
 		rooms:make(map[uint32]*room.Room1v1,1000),
+		id_seed:10000,
 		pool:utils.NewMemoryPool(64, func(impl utils.ICachedData) utils.ICachedData {
 			return &utils.KcpReq{
-				impl,0,0,0,make([]byte,utils.MaxPktSize),
+				impl,make([]byte,utils.MaxPktSize),
 			}
 		}),
 	}

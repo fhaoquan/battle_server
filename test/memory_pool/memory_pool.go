@@ -1,8 +1,10 @@
-package utils
+package memory_pool
 
 type ICachedData interface {
-	OnReturn();
-	OnPop();
+	onReturn();
+	onPop();
+}
+type IReturnable interface {
 	Return();
 }
 type cached_data struct{
@@ -15,7 +17,7 @@ func (me *cached_data)isReturned()bool{
 }
 func (me *cached_data)Return(){
 	if !me.isReturned(){
-		me.inner_on_return();
+		me.onReturn();
 		me._cached_data_pool.cache<-me;
 	}
 }
@@ -23,13 +25,13 @@ func (me *cached_data)OnPop(){
 }
 func (me *cached_data)OnReturn(){
 }
-func (me *cached_data)inner_on_pop(){
+func (me *cached_data)onPop(){
 	me._cached_data_free=true;
-	me._cached_data_data.OnPop();
+	me._cached_data_data.onPop();
 }
-func (me *cached_data)inner_on_return(){
+func (me *cached_data)onReturn(){
 	me._cached_data_free=false;
-	me._cached_data_data.OnReturn();
+	me._cached_data_data.onReturn();
 }
 type MemoryPool struct{
 	cache chan *cached_data;
@@ -39,10 +41,10 @@ func (pool *MemoryPool)Len()int{
 }
 func (pool *MemoryPool)Pop() ICachedData {
 	o:=<-pool.cache;
-	o.inner_on_pop();
+	o.onPop();
 	return o._cached_data_data;
 }
-func NewMemoryPool(size int,builder func(ICachedData) ICachedData)(*MemoryPool){
+func NewMemoryPool(size int,builder func(IReturnable) ICachedData)(*MemoryPool){
 	p:=&MemoryPool{
 		make(chan *cached_data,size),
 	};

@@ -6,7 +6,7 @@ import (
 	"../utils"
 )
 
-func (context *Battle)CreateUnit(data []byte)(i interface{}){
+func (context *Battle)CreateUnit(who uint32,data []byte)(i interface{}){
 	defer func(){
 		if e:=recover();e!=nil{
 			i=errors.New(fmt.Sprint(e));
@@ -27,6 +27,7 @@ func (context *Battle)CreateUnit(data []byte)(i interface{}){
 	wtr.write_unit_count(count);
 	for i:=0;i<(int)(count);i++{
 		context.CreateUnitDo(rdr.read_unit_id(), func(u *Unit) {
+			u.Owner=who;
 			u.Type=rdr.read_uint8();
 			u.Camps=rdr.read_unit_camps();
 			u.Level=rdr.read_uint8();

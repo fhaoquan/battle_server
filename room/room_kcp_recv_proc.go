@@ -1,61 +1,41 @@
 package room
 
 import (
-	"net"
-	"fmt"
-	"errors"
+	"time"
 	"github.com/sirupsen/logrus"
-	"../utils"
+	"errors"
+	"fmt"
 )
-func (me *Room1v1)kcp_recv_proc(session *kcp_session){
-	defer func(){
-		me.wait.Done();
-	}()
-	me.wait.Add(1);
-	e:=func()(err error){
-		defer func(){
-			if e:=recover();e!=nil{
-				err=errors.New(fmt.Sprint(e));
-			}
-		}()
-		err_times:=0;
-		pool:=utils.NewMemoryPool(16, func(impl utils.ICachedData) utils.ICachedData {
-			return &utils.KcpReq{
-				impl,0,0,0,make([]byte,utils.MaxPktSize),
-			}
-		})
+
+func (me *Room1v1)room_kcp_recv_proc(p *room_player){
+	session:=p.kcp_session;
+	t:=time.Tick(time.Second*5);
+	recv_flag:=false;
+	e:=func()(e error){
 		for{
 			select {
-			case _,ok:=<-me.close_sig:
-				if !ok {
-					return nil;
+			case p,ok:=<-session.ChRecv:
+				if ok{
+					recv_flag=true;
+					me.kcp_chan<-p;
+				}else{
+					return errors.New(fmt.Sprint("room ",me.rid," session.ChRecv closed"));
 				}
-			default:
-				r:=pool.Pop().(*utils.KcpReq);
-				switch e:=session.Recv(r);e.(type){
-				case nil:
-					err_times=0;
-					me.kcp_chan<-r;
-				case net.Error:
-					logrus.Error(e);
-					r.Return();
-					if e.(net.Error).Temporary(){
-						if err_times++;err_times>5{
-							return errors.New("5 times temporary error!");
-						}
-					}else{
-						return e;
-					}
-				default:
-					r.Return();
-					return e;
+			case <-t:
+				if !recv_flag{
+					return errors.New(fmt.Sprint("room ",me.rid," session timeout"));
+				}else{
+					recv_flag=false;
 				}
+			case <-me.close_sig:
+				return errors.New(fmt.Sprint("room ",me.rid," close_sig has called"));
 			}
 		}
+
 	}();
-	session.Close();
 	if e!=nil{
 		logrus.Error(e);
-		return;
 	}
+	me.event_sig<-&kcp_session_closed{p,session};
+	session.Close(false);
 }

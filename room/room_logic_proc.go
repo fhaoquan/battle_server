@@ -19,12 +19,12 @@ func (me *Room1v1)logic_proc(){
 		}()
 		for {
 			select {
-			case _,ok:=<-me.close_sig:
-				if !ok {
-					return nil;
-				}
+			case <-me.close_sig:
+				return nil;
 			case kcp_msg:=<-me.kcp_chan:
 				me.on_kcp_message(kcp_msg);
+			case udp_msg:=<-me.udp_chan:
+				me.on_udp_message(udp_msg);
 			case event:=<-me.event_sig:
 				me.on_event(event);
 			}

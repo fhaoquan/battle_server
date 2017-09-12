@@ -3,6 +3,7 @@ package restful
 import (
 	"../../room"
 	"../../world"
+	"../../battle"
 	"github.com/pkg/errors"
 	"fmt"
 	"github.com/emicklei/go-restful"
@@ -11,6 +12,7 @@ import (
 type s_player_info struct {
 	Id int;
 	Name string;
+	Units []battle.Unit;
 }
 func (me *s_player_info)GetPlayerID()uint32{
 	return uint32(me.Id);

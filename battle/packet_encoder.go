@@ -7,17 +7,17 @@ type packet_encoder struct{
 	pos int;
 }
 func (w *packet_encoder)write_uint64(v uint64)(*packet_encoder){
-	binary.BigEndian.PutUint64(w.data[w.pos:],v);
+	binary.LittleEndian.PutUint64(w.data[w.pos:],v);
 	w.pos+=8;
 	return w;
 }
 func (w *packet_encoder)write_uint32(v uint32)(*packet_encoder){
-	binary.BigEndian.PutUint32(w.data[w.pos:],v);
+	binary.LittleEndian.PutUint32(w.data[w.pos:],v);
 	w.pos+=4;
 	return w;
 }
 func (w *packet_encoder)write_uint16(v uint16)(*packet_encoder){
-	binary.BigEndian.PutUint16(w.data[w.pos:],v);
+	binary.LittleEndian.PutUint16(w.data[w.pos:],v);
 	w.pos+=2;
 	return w;
 }
@@ -62,7 +62,7 @@ func (w *packet_encoder)get_uint08_placeholder()(writer func(v uint8)){
 func (w *packet_encoder)get_uint16_placeholder()(writer func(v uint16)){
 	p:=w.pos;
 	writer=func(v uint16){
-		binary.BigEndian.PutUint16(w.data[p:],v);
+		binary.LittleEndian.PutUint16(w.data[p:],v);
 	}
 	w.pos+=2;
 	return ;

@@ -1,4 +1,4 @@
-package kcp_server
+package old
 
 import (
 	"github.com/xtaci/kcp-go"
@@ -6,6 +6,9 @@ import (
 	"github.com/sirupsen/logrus"
 	"../../world"
 )
+
+
+
 type kcp_config interface {
 	GetAddr()string;
 }
@@ -49,7 +52,19 @@ func (s *KcpServer)StartAt(world *world.World)(error){
 					conn.SetStreamMode(true);
 					conn.SetMtu(1400);
 					logrus.Error("one session connected :",conn.RemoteAddr())
-					world.OnNewKCPConnection(conn);
+					go func(c *kcp.UDPSession){
+						d:=make([]byte,1024);
+						for i:=0;i<1000;i++{
+							if n,e:=c.Read(d);e==nil{
+								logrus.Error("recved : ",d[:n])
+							}
+							time.Sleep(time.Second);
+						}
+
+						c.Close();
+						logrus.Error("one session closed :",c.RemoteAddr())
+					}(conn);
+					//world.OnNewKCPConnection(conn);
 				}else if err,ok:=e.(interface{Timeout()bool});!ok||!err.Timeout(){
 					logrus.Error(e);
 				}

@@ -7,13 +7,16 @@ import (
 	cli "github.com/urfave/cli"
 	"../server/restful"
 	"../server/kcp_server"
+	"../server/udp_server"
 	"../world"
 	"net/http"
 	"time"
 	//"../test"
+	"runtime"
 )
 
 func main() {
+	runtime.GOMAXPROCS(runtime.NumCPU());
 	app:=&cli.App{
 		Name:"battle server",
 		Usage:"frame sync server for battle",
@@ -25,6 +28,11 @@ func main() {
 				Usage:"listen kcp",
 			},
 			&cli.StringFlag{
+				Name:"udp",
+				Value:":9091",
+				Usage:"listen kcp",
+			},
+			&cli.StringFlag{
 				Name:"rpc",
 				Value:":9092",
 				Usage:"listen tcp",
@@ -33,9 +41,19 @@ func main() {
 	};
 
 	app.Action=func(c *cli.Context) error{
-		//test.TestNewRoom();
 		w:=world.NewWorld();
-		kcp_server.NewKcpServer(c.String("kcp")).StartAt(w);
+		kcp_server.StartGateway(c.String("kcp"),func(uid,rid uint32,session *kcp_server.KcpSession){
+			defer func(){
+				recover();
+			}()
+			if r:=w.FindRoom(rid);r!=nil{
+				r.OnKcpSession(uid,session);
+			}else{
+				log.Error("can not find room ",rid," at session",session.RemoteAddr);
+				session.Close(false);
+			}
+		});
+		udp_server.StartGateway(c.String("udp"));
 		restful.NewRoomWS(w);
 		http.ListenAndServe(c.String("rpc"),nil);
 		return nil;

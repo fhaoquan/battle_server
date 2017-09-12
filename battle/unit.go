@@ -1,5 +1,6 @@
 package battle
 type Unit struct{
+	Owner uint32;
 	ID uint16;
 	Camps uint8;
 	Type uint8;

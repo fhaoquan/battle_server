@@ -1,7 +1,6 @@
 package room
 
 import (
-	"../server/udp_server"
 	"../battle"
 	"errors"
 )
@@ -35,26 +34,14 @@ func (me* BattleRoomBuilder)WithPlayers(i_player_getter ...interface{
 	}
 	return me;
 }
-func (me* BattleRoomBuilder)WithUDPSession(connection *udp_server.UdpConnection)(*BattleRoomBuilder){
-	me.r.rid=(uint32)(connection.Addr.Port);
-	me.r.p1.udp_session=&udp_session{me.r.p1.uid,connection,nil};
-	me.r.p2.udp_session=&udp_session{me.r.p2.uid,connection,nil};
-	return me;
-}
 func BuildRoom1v1(plrs ...interface{
 	GetPlayerID()uint32;
 	GetPlayerName()string;
 })(*Room1v1,error){
-	u,e:=udp_server.TheUDPConnManager.Pop();
-	if(e!=nil){
-		return nil,e;
-	}
 	r:=NewBattleRoomBuilder(&Room1v1{
 		new_base_room(battle.NewBattle()),
 		nil,
 		nil,
-	}).
-		WithPlayers(plrs[0],plrs[1]).
-		WithUDPSession(u).r;
+	}).WithPlayers(plrs[0],plrs[1]).r;
 	return r,nil;
 }
