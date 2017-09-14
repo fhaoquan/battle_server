@@ -15,24 +15,33 @@ func (me *Room1v1)frame_proc(duration time.Duration){
 	<-time.After(duration);
 	me.event_sig<-&start_event{};
 	frame:=0;
-	e:=func()(err error){
+	t:=time.NewTicker(time.Millisecond*1000);
+	f:=func()(run bool,err error){
+		run=true;
+		err=nil;
 		defer func(){
 			if e:=recover();e!=nil{
 				err=errors.New(fmt.Sprint(e));
 			}
 		}()
-		t:=time.Tick(time.Millisecond*50);
-		for {
-			select {
-			case <-me.close_sig:
-				return nil;
-			case <-t:
-				me.event_sig<- frame_event{uint32(frame)};
-				frame++;
-			}
+		select {
+		case <-me.close_sig:
+			return false,nil;
+		case <-t.C:
+			me.event_sig<- &frame_event{uint32(frame)};
+			frame++;
 		}
-	}();
-	if e!=nil{
-		logrus.Error(e);
+		return ;
+	};
+	for{
+		still_run,e:=f();
+		if e!=nil{
+			logrus.Error(e);
+		}
+		if !still_run{
+			t.Stop();
+			return;
+		}
 	}
+
 }

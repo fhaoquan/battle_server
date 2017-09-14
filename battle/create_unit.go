@@ -22,7 +22,8 @@ func (context *Battle)CreateUnit(who uint32,data []byte)(i interface{}){
 		data:data,
 		pos:0,
 	}
-	f:=wtr.get_uint16_placeholder();
+	ph1:=wtr.get_uint16_placeholder();
+	ph2:=wtr.get_uint08_placeholder();
 	count:=rdr.read_unit_count();
 	wtr.write_unit_count(count);
 	for i:=0;i<(int)(count);i++{
@@ -51,7 +52,7 @@ func (context *Battle)CreateUnit(who uint32,data []byte)(i interface{}){
 			wtr.write_uint16(u.AimingFace);
 		})
 	}
-	res.LEN=uint16(wtr.pos);
-	f(res.LEN-2);
+	ph2(utils.CMD_create_unit);
+	ph1(uint16(wtr.pos)-2);
 	return res;
 }

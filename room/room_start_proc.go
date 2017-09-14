@@ -26,7 +26,8 @@ func (me *Room1v1)start_proc(){
 				return errors.New(fmt.Sprint("room ",me.rid, " wait player login timeout"));
 			case event:=<-me.event_sig:
 				me.on_event(event);
-				if me.p1.kcp_session!=nil && me.p2.kcp_session!=nil{
+				if me.p1.kcp_session!=nil || me.p2.kcp_session!=nil{
+				//if me.p1.kcp_session!=nil && me.p2.kcp_session!=nil{
 					return nil;
 				}
 			}
@@ -36,7 +37,7 @@ func (me *Room1v1)start_proc(){
 		me.Close(e);
 		return;
 	}
-	udp_server.UdpSlot[me.rid]=me.udp_chan;
+	udp_server.UdpSlot[me.rid-10000]=me.udp_chan;
 	go me.logic_proc();
 	go me.frame_proc(time.Second*5);
 }

@@ -30,8 +30,8 @@ type BaseRoom struct {
 	the_battle	*battle.Battle;
 	event_sig	chan interface{};
 	close_sig	chan interface{};
-	kcp_chan	chan utils.IKcpRequest;
-	udp_chan	chan utils.IUdpRequest;
+	kcp_chan	chan *utils.KcpReq;
+	udp_chan	chan *utils.UdpReq;
 	udp_sender	*net.UDPConn;
 	once_start	sync.Once;
 	once_close	sync.Once;
@@ -53,8 +53,8 @@ func new_base_room(the_battle *battle.Battle)(*BaseRoom){
 		the_battle,
 		make(chan interface{},5),
 		make(chan interface{},1),
-		make(chan utils.IKcpRequest,16),
-		make(chan utils.IUdpRequest,16),
+		make(chan *utils.KcpReq,16),
+		make(chan *utils.UdpReq,16),
 		nil,
 		sync.Once{},
 		sync.Once{},
@@ -79,19 +79,19 @@ func (me *Room1v1)on_handler_result(rtn interface{}){
 	switch rtn.(type){
 	case nil:
 		return ;
-	case utils.IKcpResponse:
-		me.on_kcp_response(rtn.(utils.IKcpResponse));
-		rtn.(utils.IKcpResponse).Return();
-	case []utils.IKcpResponse:
-		for _,r:=range rtn.([]utils.IKcpResponse){
+	case *utils.KcpRes:
+		me.on_kcp_response(rtn.(*utils.KcpRes));
+		rtn.(*utils.KcpRes).Return();
+	case []*utils.KcpRes:
+		for _,r:=range rtn.([]*utils.KcpRes){
 			me.on_kcp_response(r);
 			r.Return();
 		}
-	case utils.IUdpResponse:
-		me.on_udp_response(rtn.(utils.IUdpResponse));
-		rtn.(utils.IUdpResponse).Return();
-	case []utils.IUdpResponse:
-		for _,r:=range rtn.([]utils.IUdpResponse){
+	case *utils.UdpRes:
+		me.on_udp_response(rtn.(*utils.UdpRes));
+		rtn.(*utils.UdpRes).Return();
+	case []*utils.UdpRes:
+		for _,r:=range rtn.([]*utils.UdpRes){
 			me.on_udp_response(r);
 			r.Return();
 		}
@@ -104,26 +104,28 @@ func (me *Room1v1)on_handler_result(rtn interface{}){
 }
 func (me *Room1v1)on_packet(who uint32,bdy []byte){
 	switch bdy[0]{
-	case 1:
+	case utils.CMD_pingpong:
+		logrus.Error("room ",me.rid," recved ping data =",bdy[1:5]);
+		me.on_handler_result(me.the_battle.Pong(who,bdy[1:]));
+		return ;
+	case utils.CMD_unit_movment:
 		me.on_handler_result(me.the_battle.UpdateUnitMovement(bdy[1:]));
-	case 2:
+	case utils.CMD_attack_start:
 		me.on_handler_result(me.the_battle.UnitAttackStart(bdy[1:]));
-	case 3:
+	case utils.CMD_attack_done:
 		me.on_handler_result(me.the_battle.UnitAttackDone(bdy[1:]));
-	case 4:
-		me.on_handler_result(me.the_battle.CreateUnit(who,bdy[1:]));
-	case 5:
+	case utils.CMD_create_unit:
 		me.on_handler_result(me.the_battle.CreateUnit(who,bdy[1:]));
 	}
 }
-func (me *Room1v1)on_udp_response(r utils.IUdpResponse){
+func (me *Room1v1)on_udp_response(r *utils.UdpRes){
 	defer func() {
 		r.Return();
 		if e:=recover();e!=nil{
 			logrus.Error(e);
 		}
 	}()
-	if(r.IsBroadcast()){
+	if(r.Broadcast){
 		if me.p1.peer_udp_addr!=nil{
 			me.udp_sender.WriteTo(r.GetSendData(),me.p1.peer_udp_addr);
 		}
@@ -140,7 +142,7 @@ func (me *Room1v1)on_udp_response(r utils.IUdpResponse){
 		}
 	}
 }
-func (me *Room1v1)on_kcp_response(r utils.IKcpResponse){
+func (me *Room1v1)on_kcp_response(r *utils.KcpRes){
 	defer func() {
 		r.Return();
 		if e:=recover();e!=nil{
@@ -164,11 +166,11 @@ func (me *Room1v1)on_kcp_response(r utils.IKcpResponse){
 		}
 	}
 }
-func (me *Room1v1)on_kcp_message(r utils.IKcpRequest){
+func (me *Room1v1)on_kcp_message(r *utils.KcpReq){
 	defer r.Return();
 	me.on_packet(r.GetUID(),r.GetMsgBody());
 }
-func (me *Room1v1)on_udp_message(r utils.IUdpRequest){
+func (me *Room1v1)on_udp_message(r *utils.UdpReq){
 	defer r.Return();
 	me.on_packet(r.GetUID(),r.GetMsgBody());
 }
@@ -192,13 +194,9 @@ func (me *Room1v1)on_event(event interface{}){
 		}
 	case *start_event:
 		me.on_handler_result(me.the_battle.BroadcastBattleStart());
+		me.on_handler_result(me.the_battle.BroadcastBattleAll());
 	case *frame_event:
-		switch event.(*frame_event).frame%20 {
-		case 0:
-			me.on_handler_result(me.the_battle.BroadcastBattleAll());
-		default:
-			me.on_handler_result(me.the_battle.BroadcastBattleMovementData());
-		}
+		me.on_handler_result(me.the_battle.BroadcastBattleMovementData());
 	}
 }
 func (me *Room1v1)OnKcpSession(uid uint32,session *kcp_server.KcpSession){

@@ -32,6 +32,7 @@ func (context *Battle)UnitAttackDone(data []byte)(i interface{}){
 		}
 	}()
 	res:=context.kcp_res_pool.Pop().(*utils.KcpRes);
+	res.UID=0;
 	res.Broadcast=true;
 	wtr:=&packet_encoder{
 		res.BDY,
@@ -41,13 +42,14 @@ func (context *Battle)UnitAttackDone(data []byte)(i interface{}){
 		data:data,
 		pos:0,
 	}
-	f:=wtr.get_uint16_placeholder();
+	ph1:=wtr.get_uint16_placeholder();
+	ph2:=wtr.get_uint08_placeholder();
 	count:=(int)(rdr.read_unit_count());
 	wtr.write_unit_count((uint8)(count));
 	for i:=0;i<count;i++{
 		context.each_unit_attack_done(rdr,wtr);
 	}
-	res.LEN=(uint16)(wtr.pos);
-	f(res.LEN-2);
+	ph2(utils.CMD_attack_done);
+	ph1((uint16)(wtr.pos)-2);
 	return res;
 }

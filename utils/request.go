@@ -19,16 +19,16 @@ func (me *KcpReq)GetALL()[]byte{
 	return me.Data;
 }
 func (me *KcpReq)GetLEN()uint16{
-	return binary.LittleEndian.Uint16(me.Data[2:]);
+	return binary.LittleEndian.Uint16(me.Data[10:12]);
 }
 func (me *KcpReq)GetUID()uint32{
-	return binary.LittleEndian.Uint32(me.Data[4:]);
+	return binary.LittleEndian.Uint32(me.Data[2:6]);
 }
 func (me *KcpReq)GetRID()uint32{
-	return binary.LittleEndian.Uint32(me.Data[8:]);
+	return binary.LittleEndian.Uint32(me.Data[6:10]);
 }
 func (me *KcpReq)GetMsgBody()[]byte{
-	return me.Data[8:me.GetLEN()-8];
+	return me.Data[12:me.GetLEN()+12];
 }
 
 type UdpReq struct {

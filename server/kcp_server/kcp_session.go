@@ -38,7 +38,7 @@ type KcpSession struct {
 	kcp			*KcpSyncWrapper;
 	chPending	chan *pending_packet;
 	chDie		chan interface{};
-	ChRecv		chan utils.IKcpRequest;
+	ChRecv		chan *utils.KcpReq;
 	RemoteAddr	net.Addr;
 }
 func (session *KcpSession)go_session_kernel_proc(f func(a interface{}),a interface{}){
@@ -112,7 +112,7 @@ func (session *KcpSession)kcp_send_callback(buf []byte, size int){
 func (session *KcpSession)Send(data []byte){
 	session.kcp.use_kcp_in_mux(func(k *KCP) {
 		k.Send(data);
-		//k.flush(false);
+		k.flush(false);
 	})
 }
 func (session *KcpSession)Start(){
@@ -154,6 +154,6 @@ func new_kcp_session(getway *KcpGateway,conv uint32,conn net.PacketConn,remote n
 	s.kcp.unsafe_use_kcp().WndSize(32,32);
 	s.chPending=make(chan *pending_packet,16);
 	s.chDie=make(chan interface{},1);
-	s.ChRecv=make(chan utils.IKcpRequest,16);
+	s.ChRecv=make(chan *utils.KcpReq,16);
 	return s;
 }

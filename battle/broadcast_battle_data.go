@@ -13,12 +13,15 @@ func (context *Battle)BroadcastBattleMovementData()(i interface{}){
 		}
 	}()
 	res:=context.udp_res_pool.Pop().(*utils.UdpRes);
+	res.UID=0;
+	res.Broadcast=true;
 	wtr:=&packet_encoder{
 		res.BDY,
 		0,
 	}
 	ph0:=wtr.get_uint16_placeholder();
 	ph1:=wtr.get_uint08_placeholder();
+	ph2:=wtr.get_uint08_placeholder();
 	count:=0;
 	context.ForEachUnitDo(func(u *Unit)bool{
 		wtr.write_unit_id(u.ID).
@@ -30,8 +33,8 @@ func (context *Battle)BroadcastBattleMovementData()(i interface{}){
 		count++;
 		return true;
 	})
-	ph1(uint8(count));
-	res.LEN=uint16(wtr.pos);
-	ph0(res.LEN-2);
+	ph2(uint8(count));
+	ph1(utils.CMD_unit_movment);
+	ph0(uint16(wtr.pos)-2);
 	return res;
 }

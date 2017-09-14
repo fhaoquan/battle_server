@@ -11,26 +11,33 @@ func (me *Room1v1)logic_proc(){
 		me.wait.Done();
 	}()
 	me.wait.Add(1);
-	e:=func()(err error){
+	f:=func()(run bool,err error){
+		run=true;
 		defer func(){
 			if e:=recover();e!=nil{
 				err=errors.New(fmt.Sprint(e));
 			}
 		}()
-		for {
-			select {
-			case <-me.close_sig:
-				return nil;
-			case kcp_msg:=<-me.kcp_chan:
-				me.on_kcp_message(kcp_msg);
-			case udp_msg:=<-me.udp_chan:
-				me.on_udp_message(udp_msg);
-			case event:=<-me.event_sig:
-				me.on_event(event);
-			}
+		select {
+		case <-me.close_sig:
+			return false,nil;
+		case kcp_msg:=<-me.kcp_chan:
+			me.on_kcp_message(kcp_msg);
+		case udp_msg:=<-me.udp_chan:
+			me.on_udp_message(udp_msg);
+		case event:=<-me.event_sig:
+			me.on_event(event);
 		}
-	}();
-	if e!=nil{
-		logrus.Error(e);
+		return true,nil;
 	}
+	for{
+		still_run,e:=f();
+		if e!=nil{
+			logrus.Error(e);
+		}
+		if !still_run{
+			return ;
+		}
+	}
+
 }

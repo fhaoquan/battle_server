@@ -8,7 +8,7 @@ import (
 )
 
 
-var UdpSlot = make([]chan utils.IUdpRequest,1024);
+var UdpSlot = make([]chan *utils.UdpReq,1024);
 
 type UdpGateway struct {
 	once_start			sync.Once;

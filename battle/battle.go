@@ -39,12 +39,14 @@ func NewBattle()*Battle{
 	return &Battle{
 		utils.NewMemoryPool(8, func(impl utils.ICachedData)utils.ICachedData{
 			return &utils.KcpRes{
-				impl,false,0,0,make([]byte,utils.MaxPktSize),
+				impl,false,0,make([]byte,utils.MaxPktSize),
 			}
 		}),
 		utils.NewMemoryPool(8, func(impl utils.ICachedData)utils.ICachedData{
 			return &utils.UdpRes{
-				impl,false,nil,0,0,make([]byte,utils.MaxPktSize),
+				&utils.KcpRes{
+					impl,false,0,make([]byte,utils.MaxPktSize),
+				},
 			}
 		}),
 		make([]*Unit,max_unit_count),
