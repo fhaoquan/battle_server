@@ -20,7 +20,7 @@ type I_RoomManager interface{
 	DelRoom(*Room1v1)
 }
 type start_event struct{
-
+	state int;
 }
 type frame_event struct{
 	frame uint32;
@@ -193,8 +193,14 @@ func (me *Room1v1)on_event(event interface{}){
 			e.p.kcp_session=nil;
 		}
 	case *start_event:
-		me.on_handler_result(me.the_battle.BroadcastBattleStart());
-		me.on_handler_result(me.the_battle.BroadcastBattleAll());
+		switch(event.(*start_event).state){
+		case 0:
+			me.on_handler_result(me.the_battle.BroadcastBattleWaitingStart());
+		case 1:
+			me.on_handler_result(me.the_battle.BroadcastBattleStart());
+			me.on_handler_result(me.the_battle.BroadcastBattleAll());
+		}
+
 	case *frame_event:
 		me.on_handler_result(me.the_battle.BroadcastBattleMovementData());
 	}

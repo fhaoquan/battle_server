@@ -13,7 +13,7 @@ func (me *Room1v1)frame_proc(duration time.Duration){
 	}()
 	me.wait.Add(1);
 	<-time.After(duration);
-	me.event_sig<-&start_event{};
+	me.event_sig<-&start_event{1};
 	frame:=0;
 	t:=time.NewTicker(time.Millisecond*1000);
 	f:=func()(run bool,err error){
