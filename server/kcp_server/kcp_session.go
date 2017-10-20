@@ -6,6 +6,8 @@ import (
 	"github.com/sirupsen/logrus"
 	"time"
 	"sync"
+	"runtime/debug"
+	"fmt"
 )
 var (
 	xmitBuf sync.Pool;
@@ -48,6 +50,7 @@ func (session *KcpSession)go_session_kernel_proc(f func(a interface{}),a interfa
 			session.wait_close.Done();
 			if e:=recover();e!=nil{
 				logrus.Error(e);
+				logrus.Error(fmt.Sprintf("%s",debug.Stack()));
 				session.Close(false);
 			}
 		}()
@@ -70,6 +73,7 @@ func (session *KcpSession)start_recv_proc(){
 						k.Input(d.data[:d.len],true,true);
 						if n:=k.PeekSize();n>0{
 							k.Recv(p.GetALL());
+							//logrus.Error("recved pkt :",p.GetALL());
 							if p.Check() {
 								session.ChRecv<-p;
 							}else{

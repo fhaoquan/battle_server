@@ -15,6 +15,7 @@ func NewBattleRoomBuilder(r *Room1v1)(*BattleRoomBuilder){
 func (me* BattleRoomBuilder)WithPlayers(i_player_getter ...interface{
 	GetPlayerID()uint32;
 	GetPlayerName()string;
+	GetUnits()[]battle.Unit;
 })(*BattleRoomBuilder){
 	if len(i_player_getter)!=2{
 		panic(errors.New("1v1 room need 2 players"));
@@ -32,11 +33,22 @@ func (me* BattleRoomBuilder)WithPlayers(i_player_getter ...interface{
 		nil,
 		nil,
 	}
+	for i,_:=range i_player_getter[0].GetUnits(){
+		me.r.the_battle.CreateUnitDo(func(unit *battle.Unit) {
+			unit.SetAll(&i_player_getter[0].GetUnits()[i]);
+		})
+	}
+	for i,_:=range i_player_getter[1].GetUnits(){
+		me.r.the_battle.CreateUnitDo(func(unit *battle.Unit) {
+			unit.SetAll(&i_player_getter[1].GetUnits()[i]);
+		})
+	}
 	return me;
 }
 func BuildRoom1v1(plrs ...interface{
 	GetPlayerID()uint32;
 	GetPlayerName()string;
+	GetUnits()[]battle.Unit;
 })(*Room1v1,error){
 	r:=NewBattleRoomBuilder(&Room1v1{
 		new_base_room(battle.NewBattle()),

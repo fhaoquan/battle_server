@@ -4,12 +4,16 @@ import (
 	"fmt"
 	"../utils"
 	"errors"
+	"github.com/sirupsen/logrus"
+	"runtime/debug"
 )
 
 func (context *Battle)Pong(who uint32,data []byte)(i interface{}){
 	defer func(){
 		if e:=recover();e!=nil{
 			i=errors.New(fmt.Sprint(e));
+			logrus.Error(e);
+			logrus.Error(fmt.Sprintf("%s",debug.Stack()));
 		}
 	}()
 	res:=context.kcp_res_pool.Pop().(*utils.KcpRes);

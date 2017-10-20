@@ -3,12 +3,16 @@ package battle
 import (
 	"github.com/pkg/errors"
 	"fmt"
+	"github.com/sirupsen/logrus"
+	"runtime/debug"
 )
 
 func (context *Battle)UpdateUnitMovement(pkt []byte)(i interface{}){
 	defer func(){
 		if e:=recover();e!=nil{
 			i=errors.New(fmt.Sprint(e));
+			logrus.Error(e);
+			logrus.Error(fmt.Sprintf("%s",debug.Stack()));
 		}
 	}()
 	r:=&packet_decoder{

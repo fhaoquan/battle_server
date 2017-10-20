@@ -5,6 +5,8 @@ import (
 	"sync"
 	"github.com/sirupsen/logrus"
 	"../../utils"
+	"runtime/debug"
+	"fmt"
 )
 
 
@@ -18,7 +20,8 @@ func (this *UdpGateway)go_gateway_kernel_proc(f func(a interface{}),a interface{
 	go func(){
 		defer func() {
 			if e:=recover();e!=nil{
-				logrus.Fatal(e);
+				logrus.Error(e);
+				logrus.Error(fmt.Sprintf("%s",debug.Stack()));
 			}
 		}()
 		f(a);

@@ -4,11 +4,15 @@ import (
 	"fmt"
 	"errors"
 	"../utils"
+	"github.com/sirupsen/logrus"
+	"runtime/debug"
 )
 func (context *Battle)BroadcastBattleAll()(i interface{}){
 	defer func(){
 		if e:=recover();e!=nil{
 			i=errors.New(fmt.Sprint(e));
+			logrus.Error(e);
+			logrus.Error(fmt.Sprintf("%s",debug.Stack()));
 		}
 	}()
 	res:=context.kcp_res_pool.Pop().(*utils.KcpRes);
@@ -23,12 +27,7 @@ func (context *Battle)BroadcastBattleAll()(i interface{}){
 	ph2:=wtr.get_uint08_placeholder();
 	count:=0;
 	context.ForEachUnitDo(func(u *Unit)bool{
-		wtr.write_unit_id(u.ID).
-			write_unit_x(u.X).
-			write_unit_y(u.Y).
-			write_unit_speed(u.Speed).
-			write_unit_face(u.Direction).
-			write_unit_aiming_face(u.AimingFace);
+		u.WriteToBuf(wtr);
 		count++;
 		return true;
 	})

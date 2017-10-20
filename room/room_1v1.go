@@ -6,6 +6,8 @@ import (
 	"github.com/sirupsen/logrus"
 	"sync"
 	"net"
+	"runtime/debug"
+	"fmt"
 )
 type kcp_connection_request struct {
 	session		*kcp_server.KcpSession;
@@ -123,6 +125,7 @@ func (me *Room1v1)on_udp_response(r *utils.UdpRes){
 		r.Return();
 		if e:=recover();e!=nil{
 			logrus.Error(e);
+			logrus.Error(fmt.Sprintf("%s",debug.Stack()));
 		}
 	}()
 	if(r.Broadcast){
@@ -147,6 +150,7 @@ func (me *Room1v1)on_kcp_response(r *utils.KcpRes){
 		r.Return();
 		if e:=recover();e!=nil{
 			logrus.Error(e);
+			logrus.Error(fmt.Sprintf("%s",debug.Stack()));
 		}
 	}()
 	if(r.IsBroadcast()){
@@ -172,6 +176,13 @@ func (me *Room1v1)on_kcp_message(r *utils.KcpReq){
 }
 func (me *Room1v1)on_udp_message(r *utils.UdpReq){
 	defer r.Return();
+	if me.p1.uid==r.GetUID(){
+		me.p1.peer_udp_addr=r.GetAdr();
+	}else if me.p2.uid==r.GetUID(){
+		me.p2.peer_udp_addr=r.GetAdr();
+	}else{
+		return ;
+	}
 	me.on_packet(r.GetUID(),r.GetMsgBody());
 }
 func (me *Room1v1)on_event(event interface{}){

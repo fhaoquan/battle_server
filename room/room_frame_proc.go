@@ -5,6 +5,7 @@ import (
 	"time"
 	"github.com/sirupsen/logrus"
 	"errors"
+	"runtime/debug"
 )
 
 func (me *Room1v1)frame_proc(duration time.Duration){
@@ -15,13 +16,15 @@ func (me *Room1v1)frame_proc(duration time.Duration){
 	<-time.After(duration);
 	me.event_sig<-&start_event{1};
 	frame:=0;
-	t:=time.NewTicker(time.Millisecond*1000);
+	t:=time.NewTicker(time.Millisecond*50);
 	f:=func()(run bool,err error){
 		run=true;
 		err=nil;
 		defer func(){
 			if e:=recover();e!=nil{
 				err=errors.New(fmt.Sprint(e));
+				logrus.Error(e);
+				logrus.Error(fmt.Sprintf("%s",debug.Stack()));
 			}
 		}()
 		select {

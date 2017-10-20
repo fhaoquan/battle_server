@@ -9,6 +9,14 @@ type Battle struct {
 	udp_res_pool *utils.MemoryPool;
 	all_units []*Unit;
 }
+func (context *Battle)GetFreeID()uint16{
+	for i,u:=range context.all_units{
+		if u==nil{
+			return uint16(1000+i);
+		}
+	}
+	return 0;
+}
 func (context *Battle)AllUnit()[]*Unit{
 	return context.all_units;
 }
@@ -32,8 +40,8 @@ func (context *Battle)ForEachUnitDo(f func(*Unit)(bool)){
 func (context *Battle)FindUnitDo(id uint16,f func(*Unit)){
 	f(context.FindUnit(id));
 }
-func (context *Battle)CreateUnitDo(id uint16,f func(*Unit)){
-	f(context.NewUnit(id));
+func (context *Battle)CreateUnitDo(f func(*Unit)){
+	f(context.NewUnit(context.GetFreeID()));
 }
 func NewBattle()*Battle{
 	return &Battle{

@@ -7,8 +7,8 @@ import (
 	"github.com/pkg/errors"
 	"fmt"
 	"github.com/emicklei/go-restful"
+	"github.com/sirupsen/logrus"
 )
-
 type s_player_info struct {
 	Id int;
 	Name string;
@@ -19,6 +19,9 @@ func (me *s_player_info)GetPlayerID()uint32{
 }
 func (me *s_player_info)GetPlayerName()string{
 	return me.Name;
+}
+func (me *s_player_info)GetUnits()[]battle.Unit{
+	return me.Units;
 }
 type new_room_request_json struct{
 	Room_type int;
@@ -47,6 +50,7 @@ func build_room(w *world.World,param *new_room_request_json)(int,error){
 func new_room(req *restful.Request, res *restful.Response,wld *world.World){
 	s:=&new_room_request_json{};
 	if err:=req.ReadEntity(s);err!=nil{
+		logrus.Error(err);
 		res.WriteEntity(&struct {
 			RoomID int;
 			Err error;

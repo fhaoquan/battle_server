@@ -9,7 +9,7 @@ type packet_decoder struct{
 	pos int;
 }
 func (r *packet_decoder)read_uint32()(v uint32){
-	v=binary.LittleEndian.Uint32(r.data[r.pos:r.pos+2])
+	v=binary.LittleEndian.Uint32(r.data[r.pos:r.pos+4])
 	r.pos+=4;
 	return;
 }

@@ -9,7 +9,7 @@ import (
 
 func (me *Room1v1)room_kcp_recv_proc(p *room_player){
 	session:=p.kcp_session;
-	t:=time.Tick(time.Second*5);
+	t:=time.Tick(time.Second*5000);
 	recv_flag:=false;
 	e:=func()(e error){
 		for{

@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/sirupsen/logrus"
 	"errors"
+	"runtime/debug"
 )
 
 func (me *Room1v1)logic_proc(){
@@ -16,6 +17,8 @@ func (me *Room1v1)logic_proc(){
 		defer func(){
 			if e:=recover();e!=nil{
 				err=errors.New(fmt.Sprint(e));
+				logrus.Error(e);
+				logrus.Error(fmt.Sprintf("%s",debug.Stack()));
 			}
 		}()
 		select {

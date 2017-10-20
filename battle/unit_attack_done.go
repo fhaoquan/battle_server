@@ -4,8 +4,12 @@ import (
 	"errors"
 	"fmt"
 	"../utils"
+	"github.com/sirupsen/logrus"
+	"runtime/debug"
 )
 func (context *Battle)each_unit_attack_done(rdr *packet_decoder,wtr *packet_encoder)(){
+	effect:=rdr.read_uint32();
+	wtr.write_uint32(effect);
 	power:=(rdr.read_unit_attack_power())
 	count:=(int)(rdr.read_unit_count());
 	wtr.write_unit_count((uint8)(count));
@@ -29,6 +33,8 @@ func (context *Battle)UnitAttackDone(data []byte)(i interface{}){
 	defer func(){
 		if e:=recover();e!=nil{
 			i=errors.New(fmt.Sprint(e));
+			logrus.Error(e);
+			logrus.Error(fmt.Sprintf("%s",debug.Stack()));
 		}
 	}()
 	res:=context.kcp_res_pool.Pop().(*utils.KcpRes);

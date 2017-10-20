@@ -5,6 +5,8 @@ import (
 	"time"
 	"errors"
 	"../server/udp_server"
+	"github.com/sirupsen/logrus"
+	"runtime/debug"
 )
 
 func (me *Room1v1)start_proc(){
@@ -17,6 +19,8 @@ func (me *Room1v1)start_proc(){
 		defer func(){
 			if e:=recover();e!=nil{
 				err=errors.New(fmt.Sprint(e));
+				logrus.Error(e);
+				logrus.Error(fmt.Sprintf("%s",debug.Stack()));
 			}
 		}()
 		for {
@@ -26,6 +30,10 @@ func (me *Room1v1)start_proc(){
 			case <-time.After(time.Second*60):
 				return errors.New(fmt.Sprint("room ",me.rid, " wait player login timeout"));
 			case <-t.C:
+				if me.p1.kcp_session!=nil && me.p2.kcp_session!=nil{
+					//if me.p1.kcp_session!=nil && me.p2.kcp_session!=nil{
+					return nil;
+				}
 				me.on_event(&start_event{0});
 			case event:=<-me.event_sig:
 				me.on_event(event);

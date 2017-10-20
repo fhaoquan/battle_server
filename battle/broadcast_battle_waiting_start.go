@@ -4,12 +4,16 @@ import (
 	"fmt"
 	"errors"
 	"../utils"
+	"github.com/sirupsen/logrus"
+	"runtime/debug"
 )
 
 func (context *Battle)BroadcastBattleWaitingStart()(i interface{}){
 	defer func(){
 		if e:=recover();e!=nil{
 			i=errors.New(fmt.Sprint(e));
+			logrus.Error(e);
+			logrus.Error(fmt.Sprintf("%s",debug.Stack()));
 		}
 	}()
 	res:=context.kcp_res_pool.Pop().(*utils.KcpRes);

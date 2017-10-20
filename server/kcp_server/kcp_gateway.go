@@ -8,6 +8,8 @@ import (
 	"encoding/binary"
 	"time"
 	"golang.org/x/net/ipv4"
+	"runtime/debug"
+	"fmt"
 )
 type pending_connection struct{
 	uid				uint32;
@@ -45,7 +47,8 @@ func (this *KcpGateway)go_gateway_kernel_proc(f func(a interface{}),a interface{
 	go func(){
 		defer func() {
 			if e:=recover();e!=nil{
-				logrus.Fatal(e);
+				logrus.Error(e);
+				logrus.Error(fmt.Sprintf("%s",debug.Stack()));
 			}
 		}()
 		f(a);
