@@ -3,7 +3,7 @@ package main
 
 import (
 	"os"
-	log "github.com/sirupsen/logrus"
+	"github.com/sirupsen/logrus"
 	cli "github.com/urfave/cli"
 	"../server/restful"
 	"../server/kcp_server"
@@ -17,6 +17,7 @@ import (
 
 func main() {
 	runtime.GOMAXPROCS(runtime.NumCPU());
+	logrus.StandardLogger().Formatter.(*logrus.TextFormatter).TimestampFormat=time.StampMilli;
 	app:=&cli.App{
 		Name:"battle server",
 		Usage:"frame sync server for battle",
@@ -49,7 +50,7 @@ func main() {
 			if r:=w.FindRoom(rid);r!=nil{
 				r.OnKcpSession(uid,session);
 			}else{
-				log.Error("can not find room ",rid," at session",session.RemoteAddr);
+				logrus.Error("can not find room ",rid," at session",session.RemoteAddr);
 				session.Close(false);
 			}
 		});
@@ -58,7 +59,7 @@ func main() {
 		http.ListenAndServe(c.String("rpc"),nil);
 		return nil;
 	}
-	log.Info("server started at ",time.Now());
+	logrus.Info("server started at ",time.Now());
 	app.Run(os.Args);
-	log.Info("server stoped at ",time.Now());
+	logrus.Info("server stoped at ",time.Now());
 }

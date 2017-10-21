@@ -107,9 +107,7 @@ func (me *Room1v1)on_handler_result(rtn interface{}){
 func (me *Room1v1)on_packet(who uint32,bdy []byte){
 	switch bdy[0]{
 	case utils.CMD_pingpong:
-		logrus.Error("room ",me.rid," recved ping data =",bdy[1:5]);
 		me.on_handler_result(me.the_battle.Pong(who,bdy[1:]));
-		return ;
 	case utils.CMD_unit_movment:
 		me.on_handler_result(me.the_battle.UpdateUnitMovement(bdy[1:]));
 	case utils.CMD_attack_start:
@@ -118,6 +116,8 @@ func (me *Room1v1)on_packet(who uint32,bdy []byte){
 		me.on_handler_result(me.the_battle.UnitAttackDone(bdy[1:]));
 	case utils.CMD_create_unit:
 		me.on_handler_result(me.the_battle.CreateUnit(who,bdy[1:]));
+	case utils.CMD_unit_destory:
+		me.on_handler_result(me.the_battle.UnitDestory(bdy[1:]));
 	}
 }
 func (me *Room1v1)on_udp_response(r *utils.UdpRes){
@@ -213,7 +213,8 @@ func (me *Room1v1)on_event(event interface{}){
 		}
 
 	case *frame_event:
-		me.on_handler_result(me.the_battle.BroadcastBattleMovementData());
+		me.on_handler_result(me.the_battle.BroadcastBattleMovementData(me.p1.uid,me.p2.uid));
+		me.on_handler_result(me.the_battle.BroadcastBattleMovementData(me.p2.uid,me.p1.uid));
 	}
 }
 func (me *Room1v1)OnKcpSession(uid uint32,session *kcp_server.KcpSession){

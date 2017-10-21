@@ -1,6 +1,9 @@
 package battle
 
-import "../utils"
+import (
+	"../utils"
+	"container/list"
+)
 
 const unit_id_offset	=1000;
 const max_unit_count	=2000;
@@ -8,6 +11,7 @@ type Battle struct {
 	kcp_res_pool *utils.MemoryPool;
 	udp_res_pool *utils.MemoryPool;
 	all_units []*Unit;
+	living_units *list.List;
 }
 func (context *Battle)GetFreeID()uint16{
 	for i,u:=range context.all_units{
@@ -25,6 +29,7 @@ func (context *Battle)FindUnit(id uint16)*Unit{
 }
 func (context *Battle)NewUnit(id uint16)*Unit{
 	context.all_units[id-1000]=NewUnit(id);
+	context.living_units.PushBack(id);
 	return context.all_units[id-1000];
 }
 func (context *Battle)ForEachUnitDo(f func(*Unit)(bool)){
@@ -58,5 +63,6 @@ func NewBattle()*Battle{
 			}
 		}),
 		make([]*Unit,max_unit_count),
+		list.New(),
 	};
 }

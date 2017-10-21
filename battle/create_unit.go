@@ -16,6 +16,7 @@ func (context *Battle)CreateUnit(who uint32,data []byte)(i interface{}){
 			logrus.Error(fmt.Sprintf("%s",debug.Stack()));
 		}
 	}()
+	logrus.Error("in CreateUnit");
 	res:=context.kcp_res_pool.Pop().(*utils.KcpRes);
 	res.Broadcast=true;
 	wtr:=&packet_encoder{

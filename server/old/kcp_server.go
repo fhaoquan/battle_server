@@ -5,6 +5,7 @@ import (
 	"time"
 	"github.com/sirupsen/logrus"
 	"../../world"
+	"../../utils"
 )
 
 
@@ -21,10 +22,10 @@ func (s *KcpServer)StartAt(world *world.World)(error){
 	if(e!=nil){
 		return e;
 	}
-	if e=l.SetReadBuffer(1024*16);e!=nil{
+	if e=l.SetReadBuffer(utils.MaxPktSize*16);e!=nil{
 		return e;
 	}
-	if e=l.SetWriteBuffer(1024*16);e!=nil{
+	if e=l.SetWriteBuffer(utils.MaxPktSize*16);e!=nil{
 		return e;
 	}
 	if e=l.SetDSCP(0);e!=nil{
@@ -45,15 +46,15 @@ func (s *KcpServer)StartAt(world *world.World)(error){
 				l.SetDeadline(time.Now().Add(time.Second*1));
 				conn,e:=l.AcceptKCP();
 				if(e==nil){
-					conn.SetReadBuffer(1024*10);
-					conn.SetWriteBuffer(1024*10);
+					conn.SetReadBuffer(utils.MaxPktSize*10);
+					conn.SetWriteBuffer(utils.MaxPktSize*10);
 					conn.SetWindowSize(32, 32);
 					conn.SetNoDelay(1, 5, 2, 1);
 					conn.SetStreamMode(true);
-					conn.SetMtu(1400);
+					conn.SetMtu(utils.MaxPktSize*2);
 					logrus.Error("one session connected :",conn.RemoteAddr())
 					go func(c *kcp.UDPSession){
-						d:=make([]byte,1024);
+						d:=make([]byte,utils.MaxPktSize);
 						for i:=0;i<1000;i++{
 							if n,e:=c.Read(d);e==nil{
 								logrus.Error("recved : ",d[:n])

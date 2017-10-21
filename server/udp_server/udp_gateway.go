@@ -10,7 +10,7 @@ import (
 )
 
 
-var UdpSlot = make([]chan *utils.UdpReq,1024);
+var UdpSlot = make([]chan *utils.UdpReq,utils.MaxRoomSize);
 
 type UdpGateway struct {
 	once_start			sync.Once;
@@ -83,8 +83,8 @@ func StartGateway(addr string){
 		logrus.Fatal(err);
 		return;
 	}
-	conn.SetReadBuffer(32*1024*1024);
-	conn.SetWriteBuffer(32*1024*1024);
+	conn.SetReadBuffer(32*utils.MaxPktSize*utils.MaxPktSize);
+	conn.SetWriteBuffer(32*utils.MaxPktSize*utils.MaxPktSize);
 	s:=new(UdpGateway);
 	s.conn=conn;
 	s.start();

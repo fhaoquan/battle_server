@@ -20,6 +20,9 @@ func NewUnit(id uint16)*Unit{
 		ID:id,
 	};
 }
+func (me *Unit)Death()(bool){
+	return me.HP==0;
+}
 func (me *Unit)SetAll(u *Unit){
 	me.Owner=u.Owner;
 	me.Type =u.Type;

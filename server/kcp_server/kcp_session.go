@@ -73,7 +73,7 @@ func (session *KcpSession)start_recv_proc(){
 						k.Input(d.data[:d.len],true,true);
 						if n:=k.PeekSize();n>0{
 							k.Recv(p.GetALL());
-							//logrus.Error("recved pkt :",p.GetALL());
+							logrus.Error("recved pkt :",p.GetMsgBody()[0]);
 							if p.Check() {
 								session.ChRecv<-p;
 							}else{

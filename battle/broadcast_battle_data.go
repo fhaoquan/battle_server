@@ -8,7 +8,7 @@ import (
 	"runtime/debug"
 )
 
-func (context *Battle)BroadcastBattleMovementData()(i interface{}){
+func (context *Battle)BroadcastBattleMovementData(receiver uint32, owner_filter uint32)(i interface{}){
 	defer func(){
 		if e:=recover();e!=nil{
 			i=errors.New(fmt.Sprint(e));
@@ -17,8 +17,9 @@ func (context *Battle)BroadcastBattleMovementData()(i interface{}){
 		}
 	}()
 	res:=context.udp_res_pool.Pop().(*utils.UdpRes);
-	res.UID=0;
-	res.Broadcast=true;
+	//res.UID=0;
+	res.Broadcast=false;
+	res.UID=receiver;
 	wtr:=&packet_encoder{
 		res.BDY,
 		0,
@@ -27,18 +28,29 @@ func (context *Battle)BroadcastBattleMovementData()(i interface{}){
 	ph1:=wtr.get_uint08_placeholder();
 	ph2:=wtr.get_uint08_placeholder();
 	count:=0;
-	context.ForEachUnitDo(func(u *Unit)bool{
-		wtr.write_unit_id(u.ID).
-			write_unit_x(u.X).
-			write_unit_y(u.Y).
-			write_unit_speed(u.Speed).
-			write_unit_face(u.Direction).
-			write_unit_aiming_face(u.AimingFace);
-		count++;
-		return true;
-	})
+
+	for e:=context.living_units.Front();e!=nil;e=e.Next(){
+		uid:=e.Value.(uint16);
+		context.FindUnitDo(uint16(uid), func(u *Unit) {
+			if(u.Owner==owner_filter){
+				wtr.write_unit_id(u.ID).
+					write_unit_x(u.X).
+					write_unit_y(u.Y).
+					write_unit_speed(u.Speed).
+					write_unit_face(u.Direction).
+					write_unit_aiming_face(u.AimingFace);
+				count++;
+			}
+		})
+	}
 	ph2(uint8(count));
 	ph1(utils.CMD_unit_movment);
 	ph0(uint16(wtr.pos)-2);
-	return res;
+	if count>0{
+		return res;
+	}else{
+		res.Return();
+		return nil;
+	}
+
 }

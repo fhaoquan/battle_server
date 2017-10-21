@@ -20,7 +20,9 @@ func (context *Battle)each_unit_attack_done(rdr *packet_decoder,wtr *packet_enco
 		if u2!=nil{
 			if u2.HP>power{
 				u2.HP-=power;
+				logrus.Error("unit hp==",u2.HP," id==",u2.ID);
 			}else{
+				logrus.Error("unit hp==0 id==",u2.ID);
 				u2.HP=0;
 			}
 			wtr.write_uint16(u2.HP);
@@ -37,7 +39,9 @@ func (context *Battle)UnitAttackDone(data []byte)(i interface{}){
 			logrus.Error(fmt.Sprintf("%s",debug.Stack()));
 		}
 	}()
+	logrus.Error("UnitAttackDone 1");
 	res:=context.kcp_res_pool.Pop().(*utils.KcpRes);
+	logrus.Error("UnitAttackDone 2");
 	res.UID=0;
 	res.Broadcast=true;
 	wtr:=&packet_encoder{
@@ -57,5 +61,6 @@ func (context *Battle)UnitAttackDone(data []byte)(i interface{}){
 	}
 	ph2(utils.CMD_attack_done);
 	ph1((uint16)(wtr.pos)-2);
+	logrus.Error("UnitAttackDone 3");
 	return res;
 }

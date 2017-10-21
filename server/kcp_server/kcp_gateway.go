@@ -153,8 +153,8 @@ func StartGateway(addr string,on_session func(uid,rid uint32,session *KcpSession
 		return err;
 	}
 	ipv4.NewConn(conn).SetTOS(0<<2);
-	conn.SetReadBuffer(32*1024*1024);
-	conn.SetWriteBuffer(32*1024*1024);
+	conn.SetReadBuffer(32*utils.MaxPktSize*utils.MaxPktSize);
+	conn.SetWriteBuffer(32*utils.MaxPktSize*utils.MaxPktSize);
 	s:=new(KcpGateway);
 	s.conn=conn;
 	s.on_session=on_session;

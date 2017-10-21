@@ -16,7 +16,6 @@ func (context *Battle)UnitAttackStart(data []byte)(i interface{}){
 			logrus.Error(fmt.Sprintf("%s",debug.Stack()));
 		}
 	}()
-	logrus.Error("recved CMD_attack_start 1");
 	res:=context.kcp_res_pool.Pop().(*utils.KcpRes);
 	res.UID=0;
 	res.Broadcast=true;
@@ -36,16 +35,19 @@ func (context *Battle)UnitAttackStart(data []byte)(i interface{}){
 	for i:=0;i<(int)(cnt);i++{
 		uid:=rdr.read_uint16();
 		tid:=rdr.read_uint16();
-		logrus.Error("recved CMD_attack_start uid=",uid," tid=",tid);
-		if context.FindUnit(uid)!=nil{
-			out++;
-			wtr.write_uint16(uid);
-			wtr.write_uint16(tid);
+		u:=context.FindUnit(uid);
+		if u==nil{
+			continue;
 		}
+		if u.Death(){
+			continue;
+		}
+		out++;
+		wtr.write_uint16(uid);
+		wtr.write_uint16(tid);
 	}
 	ph3(byte(out));
 	ph2(utils.CMD_attack_start);
 	ph1(uint16(wtr.pos)-2);
-	logrus.Error("recved CMD_attack_start 2");
 	return res;
 }
