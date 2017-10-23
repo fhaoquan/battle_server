@@ -12,6 +12,10 @@ type Battle struct {
 	udp_res_pool *utils.MemoryPool;
 	all_units []*Unit;
 	living_units *list.List;
+	main_base_list *list.List;
+}
+func (context *Battle)AddMainBaseID(id uint16){
+	context.main_base_list.PushBack(id);
 }
 func (context *Battle)GetFreeID()uint16{
 	for i,u:=range context.all_units{
@@ -48,7 +52,7 @@ func (context *Battle)FindUnitDo(id uint16,f func(*Unit)){
 func (context *Battle)CreateUnitDo(f func(*Unit)){
 	f(context.NewUnit(context.GetFreeID()));
 }
-func NewBattle()*Battle{
+func NewBattle1v1()*Battle{
 	return &Battle{
 		utils.NewMemoryPool(8, func(impl utils.ICachedData)utils.ICachedData{
 			return &utils.KcpRes{
@@ -63,6 +67,7 @@ func NewBattle()*Battle{
 			}
 		}),
 		make([]*Unit,max_unit_count),
+		list.New(),
 		list.New(),
 	};
 }

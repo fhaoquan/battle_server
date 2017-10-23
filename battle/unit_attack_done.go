@@ -20,9 +20,7 @@ func (context *Battle)each_unit_attack_done(rdr *packet_decoder,wtr *packet_enco
 		if u2!=nil{
 			if u2.HP>power{
 				u2.HP-=power;
-				logrus.Error("unit hp==",u2.HP," id==",u2.ID);
 			}else{
-				logrus.Error("unit hp==0 id==",u2.ID);
 				u2.HP=0;
 			}
 			wtr.write_uint16(u2.HP);

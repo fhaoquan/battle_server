@@ -13,3 +13,4 @@ const CMD_attack_done =uint8(5);
 const CMD_attack_start =uint8(6);
 const CMD_battle_start =uint8(7);
 const CMD_unit_destory =uint8(8);
+const CMD_battle_end =uint8(9);

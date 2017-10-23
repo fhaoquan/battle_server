@@ -108,6 +108,7 @@ func (session *KcpSession)start_updt_proc(){
 				return ;
 			}
 		}
+		logrus.Error("session.updt_proc stoped");
 	},nil);
 }
 func (session *KcpSession)kcp_send_callback(buf []byte, size int){

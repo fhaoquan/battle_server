@@ -8,6 +8,7 @@ import (
 	"net"
 	"runtime/debug"
 	"fmt"
+	"errors"
 )
 type kcp_connection_request struct {
 	session		*kcp_server.KcpSession;
@@ -211,10 +212,15 @@ func (me *Room1v1)on_event(event interface{}){
 			me.on_handler_result(me.the_battle.BroadcastBattleStart());
 			me.on_handler_result(me.the_battle.BroadcastBattleAll());
 		}
-
 	case *frame_event:
-		me.on_handler_result(me.the_battle.BroadcastBattleMovementData(me.p1.uid,me.p2.uid));
-		me.on_handler_result(me.the_battle.BroadcastBattleMovementData(me.p2.uid,me.p1.uid));
+		switch res:=me.the_battle.CheckBattleEnd();res.(type) {
+		case nil:
+			me.on_handler_result(me.the_battle.BroadcastBattleMovementData(me.p1.uid,me.p2.uid));
+			me.on_handler_result(me.the_battle.BroadcastBattleMovementData(me.p2.uid,me.p1.uid));
+		default:
+			me.on_handler_result(res);
+			me.Close(errors.New("the battle complated!"));
+		}
 	}
 }
 func (me *Room1v1)OnKcpSession(uid uint32,session *kcp_server.KcpSession){
@@ -229,11 +235,12 @@ func (me *Room1v1)Start(manager I_RoomManager){
 }
 func (me *Room1v1)Close(why error){
 	go me.once_close.Do(func() {
+		logrus.Error("room ",me.rid," will closed for :",why);
+		close(me.close_sig);
+		me.wait.Wait();
 		if(me.manager!=nil){
 			me.manager.DelRoom(me);
 		}
-		logrus.Error("room ",me.rid," will closed for :",why)
-		close(me.close_sig);
-		me.wait.Wait();
+		logrus.Error("room ",me.rid," closed ");
 	})
 }
