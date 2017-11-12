@@ -39,7 +39,7 @@ type KcpSession struct {
 	conn		net.PacketConn
 	kcp			*KcpSyncWrapper;
 	chPending	chan *pending_packet;
-	chDie		chan interface{};
+	ChDie		chan interface{};
 	ChRecv		chan *utils.KcpReq;
 	RemoteAddr	net.Addr;
 }
@@ -73,7 +73,6 @@ func (session *KcpSession)start_recv_proc(){
 						k.Input(d.data[:d.len],true,true);
 						if n:=k.PeekSize();n>0{
 							k.Recv(p.GetALL());
-							logrus.Error("recved pkt :",p.GetMsgBody()[0]);
 							if p.Check() {
 								session.ChRecv<-p;
 							}else{
@@ -86,7 +85,7 @@ func (session *KcpSession)start_recv_proc(){
 					})
 					d.Return();
 				}
-			case <-session.chDie:
+			case <-session.ChDie:
 				return ;
 			}
 		}
@@ -104,7 +103,7 @@ func (session *KcpSession)start_updt_proc(){
 					d=time.Duration(k.interval) * time.Millisecond
 				})
 
-			case <-session.chDie:
+			case <-session.ChDie:
 				return ;
 			}
 		}
@@ -130,7 +129,7 @@ func (session *KcpSession)Start(){
 func (session *KcpSession)Close(wait bool){
 	session.once_close.Do(func() {
 		session.getway.del_session(session);
-		close(session.chDie);
+		close(session.ChDie);
 		logrus.Error("session :",session.RemoteAddr," closed");
 	})
 	if wait{
@@ -158,7 +157,7 @@ func new_kcp_session(getway *KcpGateway,conv uint32,conn net.PacketConn,remote n
 	s.kcp.unsafe_use_kcp().NoDelay(1,5,2,1);
 	s.kcp.unsafe_use_kcp().WndSize(32,32);
 	s.chPending=make(chan *pending_packet,16);
-	s.chDie=make(chan interface{},1);
+	s.ChDie=make(chan interface{},1);
 	s.ChRecv=make(chan *utils.KcpReq,16);
 	return s;
 }

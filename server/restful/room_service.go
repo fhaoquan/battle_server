@@ -38,6 +38,12 @@ func NewRoomWS(w *world.World){
 			func(req *restful.Request, res *restful.Response){
 				new_room(req,res,w);
 			}));
+	ws.Route(
+		ws. GET("/result/{room_guid}").
+			To(
+			func(req *restful.Request, res *restful.Response){
+				get_room_result(req,res);
+			}));
 
 	restful.Add(ws);
 }

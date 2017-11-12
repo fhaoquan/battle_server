@@ -10,7 +10,7 @@ import (
 func (context *Battle)UpdateUnitMovement(pkt []byte)(i interface{}){
 	defer func(){
 		if e:=recover();e!=nil{
-			i=errors.New(fmt.Sprint(e));
+			i=&BattlePanicError{errors.New(fmt.Sprint(e))};
 			logrus.Error(e);
 			logrus.Error(fmt.Sprintf("%s",debug.Stack()));
 		}
@@ -27,6 +27,7 @@ func (context *Battle)UpdateUnitMovement(pkt []byte)(i interface{}){
 			u.Speed=r.read_unit_speed();
 			u.Direction=r.read_unit_face();
 			u.AimingFace=r.read_unit_aiming_face();
+			u.Status=r.read_uint16();
 		}else{
 			return errors.New("packet error");
 		}

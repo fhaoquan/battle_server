@@ -9,15 +9,16 @@ import (
 )
 
 func (context *Battle)CreateUnit(who uint32,data []byte)(i interface{}){
+	res:=context.kcp_res_pool.Pop().(*utils.KcpRes);
 	defer func(){
 		if e:=recover();e!=nil{
-			i=errors.New(fmt.Sprint(e));
+			res.Return();
+			i=&BattlePanicError{errors.New(fmt.Sprint(e))};
 			logrus.Error(e);
 			logrus.Error(fmt.Sprintf("%s",debug.Stack()));
 		}
 	}()
-	logrus.Error("in CreateUnit");
-	res:=context.kcp_res_pool.Pop().(*utils.KcpRes);
+
 	res.Broadcast=true;
 	wtr:=&packet_encoder{
 		res.BDY,

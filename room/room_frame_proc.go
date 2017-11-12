@@ -17,6 +17,7 @@ func (me *Room1v1)frame_proc(duration time.Duration){
 	me.event_sig<-&start_event{1};
 	frame:=0;
 	t:=time.NewTicker(time.Millisecond*50);
+	sec_e:=&second_event{0};
 	f:=func()(run bool,err error){
 		run=true;
 		err=nil;
@@ -33,6 +34,9 @@ func (me *Room1v1)frame_proc(duration time.Duration){
 		case <-t.C:
 			me.event_sig<- &frame_event{uint32(frame)};
 			frame++;
+			if(frame%20)==0{
+				me.event_sig<-sec_e;
+			}
 		}
 		return ;
 	};

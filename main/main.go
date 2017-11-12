@@ -11,7 +11,7 @@ import (
 	"../world"
 	"net/http"
 	"time"
-	//"../test"
+	"../server/service_discovery"
 	"runtime"
 )
 
@@ -24,26 +24,36 @@ func main() {
 		Version:"0.0.1",
 		Flags:[]cli.Flag{
 			&cli.StringFlag{
+				Name:"bind",
+				Value:"",
+				Usage:"service bind address",
+			},
+			&cli.StringFlag{
 				Name:"kcp",
-				Value:":9090",
+				Value:"9090",
 				Usage:"listen kcp",
 			},
 			&cli.StringFlag{
 				Name:"udp",
-				Value:":9091",
+				Value:"9091",
 				Usage:"listen kcp",
 			},
 			&cli.StringFlag{
 				Name:"rpc",
-				Value:":9092",
+				Value:"9092",
 				Usage:"listen tcp",
+			},
+			&cli.StringFlag{
+				Name:"consul",
+				Value:"10.0.0.101:8500",
+				Usage:"consul address",
 			},
 		},
 	};
 
 	app.Action=func(c *cli.Context) error{
 		w:=world.NewWorld();
-		kcp_server.StartGateway(c.String("kcp"),func(uid,rid uint32,session *kcp_server.KcpSession){
+		kcp_server.StartGateway(":"+c.String("kcp"),func(uid,rid uint32,session *kcp_server.KcpSession){
 			defer func(){
 				recover();
 			}()
@@ -54,9 +64,16 @@ func main() {
 				session.Close(false);
 			}
 		});
-		udp_server.StartGateway(c.String("udp"));
+		udp_server.StartGateway(":"+c.String("udp"));
 		restful.NewRoomWS(w);
-		http.ListenAndServe(c.String("rpc"),nil);
+		restful.NewConsulCheck();
+		service_discovery.RegisteServiceToConsul(
+			c.String("consul"),
+			c.String("bind")+":"+c.String("kcp")+","+c.String("udp")+","+c.String("rpc"),
+			//c.String("bind")+":"+c.String("rpc")+"/consul/check",
+			"10.0.0.6"+":"+c.String("rpc")+"/consul/check",
+			);
+		http.ListenAndServe(":"+c.String("rpc"),nil);
 		return nil;
 	}
 	logrus.Info("server started at ",time.Now());

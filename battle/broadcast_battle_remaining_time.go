@@ -1,14 +1,14 @@
 package battle
 
 import (
-	"fmt"
 	"../utils"
-	"errors"
+	"fmt"
 	"github.com/sirupsen/logrus"
 	"runtime/debug"
+	"errors"
 )
 
-func (context *Battle)Pong(who uint32,data []byte)(i interface{}){
+func (context *Battle)BroadcastBattleRemainingTime(status uint16,remaining uint16)(i interface{}){
 	res:=context.kcp_res_pool.Pop().(*utils.KcpRes);
 	defer func(){
 		if e:=recover();e!=nil{
@@ -18,17 +18,16 @@ func (context *Battle)Pong(who uint32,data []byte)(i interface{}){
 			logrus.Error(fmt.Sprintf("%s",debug.Stack()));
 		}
 	}()
-
-	res.Broadcast=false;
-	res.UID=who;
+	res.UID=0;
+	res.Broadcast=true;
 	wtr:=&packet_encoder{
 		res.BDY,
 		0,
 	}
-	ph0:=wtr.get_uint16_placeholder();
-	ph1:=wtr.get_uint08_placeholder();
-	wtr.write_bytes(data);
-	ph1(utils.CMD_pingpong);
-	ph0(uint16(wtr.pos)-2);
+	res.Broadcast=true;
+	wtr.write_uint16(5);
+	wtr.write_uint8(utils.CMD_battle_remaining_time);
+	wtr.write_uint16(status);
+	wtr.write_uint16(remaining);
 	return res;
 }

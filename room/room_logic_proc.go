@@ -39,6 +39,7 @@ func (me *Room1v1)logic_proc(){
 			logrus.Error(e);
 		}
 		if !still_run{
+			logrus.Error("room : ",me.rid," logic_proc exited")
 			return ;
 		}
 	}

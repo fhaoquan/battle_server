@@ -7,6 +7,9 @@ import (
 
 const unit_id_offset	=1000;
 const max_unit_count	=2000;
+type BattlePanicError struct{
+	E error;
+}
 type Battle struct {
 	kcp_res_pool *utils.MemoryPool;
 	udp_res_pool *utils.MemoryPool;

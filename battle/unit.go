@@ -14,6 +14,8 @@ type Unit struct{
 	AimingFace uint16;
 	Speed uint16;
 	Status uint16;
+	Score uint16;
+	Killer uint32;
 }
 func NewUnit(id uint16)*Unit{
 	return &Unit{
@@ -37,6 +39,8 @@ func (me *Unit)SetAll(u *Unit){
 	me.AimingFace =u.AimingFace;
 	me.Speed =u.Speed;
 	me.Status =u.Status;
+	me.Score=u.Score;
+	me.Killer=u.Killer;
 }
 func (me *Unit)WriteToBuf(wtr *packet_encoder){
 	wtr.write_uint16(me.ID).

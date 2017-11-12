@@ -10,7 +10,7 @@ import (
 func (context *Battle)UnitDestory(data []byte)(i interface{}){
 	defer func(){
 		if e:=recover();e!=nil{
-			i=errors.New(fmt.Sprint(e));
+			i=&BattlePanicError{errors.New(fmt.Sprint(e))};
 			logrus.Error(e);
 			logrus.Error(fmt.Sprintf("%s",debug.Stack()));
 		}

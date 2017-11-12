@@ -9,14 +9,15 @@ import (
 )
 
 func (context *Battle)BroadcastBattleStart()(i interface{}){
+	res:=context.kcp_res_pool.Pop().(*utils.KcpRes);
 	defer func(){
 		if e:=recover();e!=nil{
-			i=errors.New(fmt.Sprint(e));
+			res.Return();
+			i=&BattlePanicError{errors.New(fmt.Sprint(e))};
 			logrus.Error(e);
 			logrus.Error(fmt.Sprintf("%s",debug.Stack()));
 		}
 	}()
-	res:=context.kcp_res_pool.Pop().(*utils.KcpRes);
 	res.UID=0;
 	res.Broadcast=true;
 	wtr:=&packet_encoder{

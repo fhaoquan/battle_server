@@ -49,6 +49,7 @@ func (me *Room1v1)start_proc(){
 		me.Close(e);
 		return;
 	}
+	me.start_timer=time.Now();
 	udp_server.UdpSlot[me.rid-10000]=me.udp_chan;
 	go me.logic_proc();
 	go me.frame_proc(time.Second);

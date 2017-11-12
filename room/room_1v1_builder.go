@@ -3,6 +3,7 @@ package room
 import (
 	"../battle"
 	"errors"
+	"time"
 )
 
 type BattleRoomBuilder struct {
@@ -36,16 +37,22 @@ func (me* BattleRoomBuilder)WithPlayers(i_player_getter ...interface{
 	for i,_:=range i_player_getter[0].GetUnits(){
 		me.r.the_battle.CreateUnitDo(func(unit *battle.Unit) {
 			unit.SetAll(&i_player_getter[0].GetUnits()[i]);
+			me.r.the_battle.AddMainBaseID(unit.ID);
 			if unit.Type==200031{
-				me.r.the_battle.AddMainBaseID(unit.ID);
+				unit.Score=300;
+			}else{
+				unit.Score=100;
 			}
 		})
 	}
 	for i,_:=range i_player_getter[1].GetUnits(){
 		me.r.the_battle.CreateUnitDo(func(unit *battle.Unit) {
 			unit.SetAll(&i_player_getter[1].GetUnits()[i]);
+			me.r.the_battle.AddMainBaseID(unit.ID);
 			if unit.Type==200031{
-				me.r.the_battle.AddMainBaseID(unit.ID);
+				unit.Score=300;
+			}else{
+				unit.Score=100;
 			}
 		})
 	}
@@ -58,6 +65,8 @@ func BuildRoom1v1(plrs ...interface{
 })(*Room1v1,error){
 	r:=NewBattleRoomBuilder(&Room1v1{
 		new_base_room(battle.NewBattle1v1()),
+		time.Second*120,
+		1,
 		nil,
 		nil,
 	}).WithPlayers(plrs[0],plrs[1]).r;

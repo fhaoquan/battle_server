@@ -8,15 +8,17 @@ import (
 	"runtime/debug"
 )
 
-func (context *Battle)BroadcastBattleMovementData(receiver uint32, owner_filter uint32)(i interface{}){
+func (context *Battle)BroadcastBattleMovementData(receiver uint32, owner_filter uint32,status uint16,remaining uint16)(i interface{}){
+	res:=context.udp_res_pool.Pop().(*utils.UdpRes);
 	defer func(){
 		if e:=recover();e!=nil{
-			i=errors.New(fmt.Sprint(e));
+			res.Return();
+			i=&BattlePanicError{errors.New(fmt.Sprint(e))};
 			logrus.Error(e);
 			logrus.Error(fmt.Sprintf("%s",debug.Stack()));
 		}
 	}()
-	res:=context.udp_res_pool.Pop().(*utils.UdpRes);
+
 	//res.UID=0;
 	res.Broadcast=false;
 	res.UID=receiver;
@@ -26,6 +28,8 @@ func (context *Battle)BroadcastBattleMovementData(receiver uint32, owner_filter 
 	}
 	ph0:=wtr.get_uint16_placeholder();
 	ph1:=wtr.get_uint08_placeholder();
+	wtr.write_uint16(status).
+		write_uint16(remaining);
 	ph2:=wtr.get_uint08_placeholder();
 	count:=0;
 
@@ -38,7 +42,8 @@ func (context *Battle)BroadcastBattleMovementData(receiver uint32, owner_filter 
 					write_unit_y(u.Y).
 					write_unit_speed(u.Speed).
 					write_unit_face(u.Direction).
-					write_unit_aiming_face(u.AimingFace);
+					write_unit_aiming_face(u.AimingFace).
+					write_uint16(u.Status);
 				count++;
 			}
 		})
