@@ -50,11 +50,13 @@ func (me* BattleRoomBuilder)WithPlayers(i_player_getter ...interface{
 		me.r.the_battle.CreateUnitDo(func(unit *battle.Unit) {
 			unit.SetAll(&i_player_getter[0].GetUnits()[i]);
 			me.r.the_battle.AddMainBaseID(unit.ID);
+			/*
 			if unit.Type==200031{
 				unit.Score=300;
 			}else{
 				unit.Score=100;
 			}
+			*/
 		})
 	}
 	for i,_:=range i_player_getter[1].GetUnits(){
