@@ -40,7 +40,8 @@ type BaseRoom struct {
 	rid         uint32
 	start_timer time.Time
 	lifecycle	time.Duration;
-	the_battle  *battle.Battle
+	win_score	int;
+	the_battle  *battle.Battle;
 	event_sig   chan interface{}
 	close_sig   chan interface{}
 	kcp_chan    chan *utils.KcpReq
@@ -70,6 +71,7 @@ func new_base_room(the_battle *battle.Battle) *BaseRoom {
 		0,
 		time.Now(),
 		time.Second*300,
+		300,
 		the_battle,
 		make(chan interface{}, 5),
 		make(chan interface{}, 1),
@@ -262,10 +264,10 @@ func (me *Room1v1) on_event(event interface{}) {
 		case time_span < me.sudden_death:
 			me.schedule_status=1;
 			switch {
-			case s1 >= 300:
+			case s1 >= me.win_score:
 				me.on_handler_result(0, me.the_battle.BroadcastBattleEnd(me.p1.uid))
 				me.Close(errors.New("the battle complated!"))
-			case s2 >= 300:
+			case s2 >= me.win_score:
 				me.on_handler_result(0, me.the_battle.BroadcastBattleEnd(me.p2.uid))
 				me.Close(errors.New("the battle complated!"))
 			}

@@ -24,8 +24,11 @@ func (me *s_player_info)GetUnits()[]battle.Unit{
 	return me.Units;
 }
 type new_room_request_json struct{
-	Room_type int;
-	Room_players []s_player_info;
+	Room_type		int;
+	Lifecycle		int;
+	SuddenDeath		int;
+	WinScore		int;
+	Room_players 	[]s_player_info;
 }
 type new_room_info struct{
 	id int;
@@ -37,7 +40,10 @@ func build_room(w *world.World,param *new_room_request_json)(*room.Room1v1,error
 		if(len(param.Room_players)!=2){
 			return nil,errors.New("player count must 2");
 		}
-		r,e:=room.BuildRoom1v1(&param.Room_players[0],&param.Room_players[1]);
+		r,e:=room.BuildRoom1v1(
+			&room.RoomBuildContext{param.Lifecycle,param.SuddenDeath,param.WinScore},
+			&param.Room_players[0],
+			&param.Room_players[1]);
 		if e!=nil{
 			return nil,e;
 		}

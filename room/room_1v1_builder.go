@@ -6,12 +6,24 @@ import (
 	"time"
 )
 
+
+type RoomBuildContext struct {
+	Lifecycle		int;
+	SuddenDeath		int;
+	WinScore		int;
+}
 type BattleRoomBuilder struct {
 	r *Room1v1;
 }
 
 func NewBattleRoomBuilder(r *Room1v1)(*BattleRoomBuilder){
 	return &BattleRoomBuilder{r};
+}
+func (me* BattleRoomBuilder)WithContext(context *RoomBuildContext)(*BattleRoomBuilder){
+	me.r.lifecycle=time.Second*(time.Duration(context.Lifecycle));
+	me.r.sudden_death=time.Second*(time.Duration(context.SuddenDeath));
+	me.r.win_score=context.WinScore;
+	return me;
 }
 func (me* BattleRoomBuilder)WithPlayers(i_player_getter ...interface{
 	GetPlayerID()uint32;
@@ -58,17 +70,20 @@ func (me* BattleRoomBuilder)WithPlayers(i_player_getter ...interface{
 	}
 	return me;
 }
-func BuildRoom1v1(plrs ...interface{
-	GetPlayerID()uint32;
-	GetPlayerName()string;
-	GetUnits()[]battle.Unit;
-})(*Room1v1,error){
+func BuildRoom1v1(
+	context *RoomBuildContext,
+	plrs ...interface{
+		GetPlayerID()uint32;
+		GetPlayerName()string;
+		GetUnits()[]battle.Unit;
+	},
+)(*Room1v1,error){
 	r:=NewBattleRoomBuilder(&Room1v1{
 		new_base_room(battle.NewBattle1v1()),
 		time.Second*120,
 		1,
 		nil,
 		nil,
-	}).WithPlayers(plrs[0],plrs[1]).r;
+	}).WithContext(context).WithPlayers(plrs[0],plrs[1]).r;
 	return r,nil;
 }
