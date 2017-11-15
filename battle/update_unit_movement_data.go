@@ -20,6 +20,7 @@ func (context *Battle)UpdateUnitMovement(pkt []byte)(i interface{}){
 		pos:0,
 	}
 	count:=(int)(r.read_unit_count());
+
 	for i:=0;i<count;i++{
 		if u:=context.FindUnit(r.read_unit_id());u!=nil{
 			u.X=r.read_unit_location_x();
