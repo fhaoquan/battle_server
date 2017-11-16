@@ -7,7 +7,7 @@ import (
 	"github.com/sirupsen/logrus"
 	"runtime/debug"
 )
-func (context *Battle)BroadcastBattleAll()(i interface{}){
+func (context *Battle)BroadcastBattleAll(uid uint32)(i interface{}){
 	res:=context.kcp_res_pool.Pop().(*utils.KcpRes);
 	defer func(){
 		if e:=recover();e!=nil{
@@ -17,8 +17,13 @@ func (context *Battle)BroadcastBattleAll()(i interface{}){
 			logrus.Error(fmt.Sprintf("%s",debug.Stack()));
 		}
 	}()
-	res.UID=0;
-	res.Broadcast=true;
+	res.UID=uid;
+	if uid==0{
+		res.Broadcast=false;
+	}else{
+		res.Broadcast=true;
+	}
+
 	wtr:=&packet_encoder{
 		res.BDY,
 		0,

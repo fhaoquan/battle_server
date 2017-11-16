@@ -44,6 +44,7 @@ func build_room(w *world.World,param *new_room_request_json)(*room.Room1v1,error
 			&room.RoomBuildContext{param.Lifecycle,param.SuddenDeath,param.WinScore},
 			&param.Room_players[0],
 			&param.Room_players[1]);
+		logrus.Error("build new room id= ",r.GetID()," guid=",r.GetGuid());
 		if e!=nil{
 			return nil,e;
 		}

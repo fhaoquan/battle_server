@@ -226,9 +226,13 @@ func (me *Room1v1) on_event(event interface{}) {
 		case me.p1.uid:
 			me.p1.kcp_session = event.(*kcp_connection_request).session
 			go me.room_kcp_recv_proc(me.p1)
+			me.on_handler_result(me.p1.uid,me.the_battle.BroadcastBattleStart(me.p1.uid));
+			me.on_handler_result(me.p1.uid, me.the_battle.BroadcastBattleAll(me.p1.uid));
 		case me.p2.uid:
 			me.p2.kcp_session = event.(*kcp_connection_request).session
 			go me.room_kcp_recv_proc(me.p2)
+			me.on_handler_result(me.p2.uid,me.the_battle.BroadcastBattleStart(me.p2.uid));
+			me.on_handler_result(me.p2.uid, me.the_battle.BroadcastBattleAll(me.p2.uid));
 		default:
 			event.(*kcp_connection_request).session.Close(false)
 		}
@@ -242,8 +246,8 @@ func (me *Room1v1) on_event(event interface{}) {
 		case 0:
 			me.on_handler_result(0, me.the_battle.BroadcastBattleWaitingStart())
 		case 1:
-			me.on_handler_result(0, me.the_battle.BroadcastBattleStart())
-			me.on_handler_result(0, me.the_battle.BroadcastBattleAll())
+			me.on_handler_result(0, me.the_battle.BroadcastBattleStart(0))
+			me.on_handler_result(0, me.the_battle.BroadcastBattleAll(0))
 		}
 	case *frame_event:
 		remaining_time := me.lifecycle-time.Now().Sub(me.start_timer);

@@ -3,6 +3,7 @@ package battle
 import (
 	"../utils"
 	"container/list"
+	//"github.com/sirupsen/logrus"
 )
 
 const unit_id_offset	=1000;
@@ -36,6 +37,7 @@ func (context *Battle)FindUnit(id uint16)*Unit{
 }
 func (context *Battle)NewUnit(id uint16)*Unit{
 	context.all_units[id-1000]=NewUnit(id);
+	//logrus.Error("context.living_units.PushBack : ",id);
 	context.living_units.PushBack(id);
 	return context.all_units[id-1000];
 }
