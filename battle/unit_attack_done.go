@@ -31,7 +31,7 @@ func (context *Battle)each_unit_attack_done(who uint32,rdr *packet_decoder,wtr *
 	}
 }
 func (context *Battle)UnitAttackDone(who uint32,data []byte)(i interface{}){
-	res:=(*utils.KcpRes)(nil);
+	res:=(utils.I_RES)(nil);
 	defer func(){
 		if e:=recover();e!=nil{
 			if res!=nil{
@@ -42,11 +42,11 @@ func (context *Battle)UnitAttackDone(who uint32,data []byte)(i interface{}){
 			logrus.Error(fmt.Sprintf("%s",debug.Stack()));
 		}
 	}()
-	res=context.kcp_res_pool.Pop().(*utils.KcpRes);
-	res.UID=0;
-	res.Broadcast=true;
+	res=context.kcp_res_pool.Pop().(utils.I_RES);
+	res.SetUID(0);
+	res.SetBroadcast(true);
 	wtr:=&packet_encoder{
-		res.BDY,
+		res.GetWriteBuffer(),
 		0,
 	}
 	rdr:=&packet_decoder{

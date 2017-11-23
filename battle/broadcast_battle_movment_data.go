@@ -9,7 +9,7 @@ import (
 )
 
 func (context *Battle)BroadcastBattleMovementData(receiver uint32, owner_filter uint32,status uint16,remaining uint16)(i interface{}){
-	res:=context.udp_res_pool.Pop().(*utils.UdpRes);
+	res:=context.udp_res_pool.Pop().(utils.I_RES);
 	defer func(){
 		if e:=recover();e!=nil{
 			res.Return();
@@ -20,12 +20,13 @@ func (context *Battle)BroadcastBattleMovementData(receiver uint32, owner_filter 
 	}()
 
 	//res.UID=0;
-	res.Broadcast=false;
-	res.UID=receiver;
+	res.SetBroadcast(false);
+	res.SetUID(receiver);
 	wtr:=&packet_encoder{
-		res.BDY,
+		res.GetWriteBuffer(),
 		0,
 	}
+	//wtr.write_uint32(utils.UdpPktHeader);
 	ph0:=wtr.get_uint16_placeholder();
 	ph1:=wtr.get_uint08_placeholder();
 	wtr.write_uint16(status).

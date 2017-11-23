@@ -9,7 +9,7 @@ import (
 )
 
 func (context *Battle)Pong(who uint32,data []byte)(i interface{}){
-	res:=context.kcp_res_pool.Pop().(*utils.KcpRes);
+	res:=context.kcp_res_pool.Pop().(utils.I_RES);
 	defer func(){
 		if e:=recover();e!=nil{
 			res.Return();
@@ -19,10 +19,10 @@ func (context *Battle)Pong(who uint32,data []byte)(i interface{}){
 		}
 	}()
 
-	res.Broadcast=false;
-	res.UID=who;
+	res.SetBroadcast(false);
+	res.SetUID(who);
 	wtr:=&packet_encoder{
-		res.BDY,
+		res.GetWriteBuffer(),
 		0,
 	}
 	ph0:=wtr.get_uint16_placeholder();

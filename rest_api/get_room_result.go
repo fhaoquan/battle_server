@@ -1,7 +1,7 @@
-package restful
+package rest_api
 
 import (
-	"../../result_cache"
+	"../result_cache"
 	"github.com/emicklei/go-restful"
 	)
 

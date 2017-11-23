@@ -59,18 +59,8 @@ func (context *Battle)CreateUnitDo(f func(*Unit)){
 }
 func NewBattle1v1()*Battle{
 	return &Battle{
-		utils.NewMemoryPool(8, func(impl utils.ICachedData)utils.ICachedData{
-			return &utils.KcpRes{
-				impl,false,0,make([]byte,utils.MaxPktSize),
-			}
-		}),
-		utils.NewMemoryPool(8, func(impl utils.ICachedData)utils.ICachedData{
-			return &utils.UdpRes{
-				&utils.KcpRes{
-					impl,false,0,make([]byte,utils.MaxPktSize),
-				},
-			}
-		}),
+		utils.NewKcpResPool(8),
+		utils.NewUdpResPool(8),
 		make([]*Unit,max_unit_count),
 		list.New(),
 		list.New(),

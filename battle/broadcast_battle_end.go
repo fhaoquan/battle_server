@@ -9,7 +9,7 @@ import (
 )
 
 func (context *Battle)BroadcastBattleEnd(winner uint32)(i interface{}){
-	res:=(*utils.KcpRes)(nil);
+	res:=(utils.I_RES)(nil);
 	defer func(){
 		if e:=recover();e!=nil{
 			if res!=nil {
@@ -20,11 +20,11 @@ func (context *Battle)BroadcastBattleEnd(winner uint32)(i interface{}){
 			logrus.Error(fmt.Sprintf("%s",debug.Stack()));
 		}
 	}()
-	res=context.kcp_res_pool.Pop().(*utils.KcpRes);
-	res.UID=0;
-	res.Broadcast=true;
+	res=context.kcp_res_pool.Pop().(utils.I_RES);
+	res.SetUID(0);
+	res.SetBroadcast(true);
 	wtr:=&packet_encoder{
-		res.BDY,
+		res.GetWriteBuffer(),
 		0,
 	}
 	wtr.write_uint16(uint16(5));

@@ -9,7 +9,7 @@ import (
 )
 
 func (context *Battle)BroadcastBattleStart(uid uint32)(i interface{}){
-	res:=context.kcp_res_pool.Pop().(*utils.KcpRes);
+	res:=context.kcp_res_pool.Pop().(utils.I_RES);
 	defer func(){
 		if e:=recover();e!=nil{
 			res.Return();
@@ -18,14 +18,14 @@ func (context *Battle)BroadcastBattleStart(uid uint32)(i interface{}){
 			logrus.Error(fmt.Sprintf("%s",debug.Stack()));
 		}
 	}()
-	res.UID=uid;
+	res.SetUID(uid);
 	if uid==0{
-		res.Broadcast=false;
+		res.SetBroadcast(false);
 	}else{
-		res.Broadcast=true;
+		res.SetBroadcast(true);
 	}
 	wtr:=&packet_encoder{
-		res.BDY,
+		res.GetWriteBuffer(),
 		0,
 	}
 	wtr.write_uint16(2);

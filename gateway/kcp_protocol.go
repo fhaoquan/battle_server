@@ -1,10 +1,20 @@
-package kcp_server
+package gateway
 
 import (
 	"encoding/binary"
 	"time"
+	"sync"
+	"../utils"
+)
+var (
+	xmitBuf sync.Pool;
 )
 
+func init() {
+	xmitBuf.New = func() interface{} {
+		return make([]byte,utils.MaxPktSize)
+	}
+}
 const (
 	IKCP_RTO_NDL     = 30  // no delay min rto
 	IKCP_RTO_MIN     = 100 // normal min rto
