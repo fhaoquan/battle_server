@@ -56,8 +56,8 @@ func (me *room) Close(why error) {
 		close(me.close_sig)
 		me.wait.Wait()
 		res := new_room_result(me.gid)
-		res.Result = append(res.Result, new_player_result(int(me.p1.uid), me.the_battle.ComputeResultScore(me.p2.uid)))
-		res.Result = append(res.Result, new_player_result(int(me.p2.uid), me.the_battle.ComputeResultScore(me.p1.uid)))
+		res.Result = append(res.Result, new_player_result(int(me.p1.uid), me.the_battle.ComputeResultScore(me.p1.uid)))
+		res.Result = append(res.Result, new_player_result(int(me.p2.uid), me.the_battle.ComputeResultScore(me.p2.uid)))
 		result_cache.CacheResult(res.Guid, res);
 		del_room(me.rid);
 		me.room_log_inf("room closed;key=",me.gid);
